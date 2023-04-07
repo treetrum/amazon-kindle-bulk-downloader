@@ -2,6 +2,8 @@
 
 Used to download Kindle eBooks in a _more_ automated fashion than is normally permitted.
 
+IMPORTANT: This doesn't work great for now... but it worked _enough_ for me to get my stuff downloaded. Think of this as a jumping off point, I don't plan on doing tech support (though feel free to raise PRs with fixes/improvements).
+
 ## Setup
 
 Install NPM dependencies with

@@ -14,13 +14,13 @@
   "license": "ISC",
   "devDependencies": {
     "@types/puppeteer": "^1.12.3",
-    "nodemon": "^1.18.11",
+    "nodemon": "^2.0.22",
     "pre-commit": "^1.2.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3"
   },
   "dependencies": {
-    "puppeteer": "^1.14.0"
+    "puppeteer": "^19.8.5"
   },
   "pre-commit": [
     "build",
