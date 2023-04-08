@@ -13,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/cli-progress": "^3.11.0",
+    "@types/lodash": "^4.14.192",
     "@types/node-fetch": "^2.6.3",
     "@types/puppeteer": "^1.12.3",
     "nodemon": "^2.0.22",
@@ -21,6 +23,9 @@
     "typescript": "^5.0.3"
   },
   "dependencies": {
+    "cli-progress": "^3.12.0",
+    "fetch-cookie": "^2.1.0",
+    "lodash": "^4.17.21",
     "node-fetch": "^2.6.9",
     "puppeteer": "^19.8.5"
   },

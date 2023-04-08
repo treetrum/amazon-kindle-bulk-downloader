@@ -1,4 +1,4 @@
-import puppeteer, { Page, Browser } from "puppeteer";
+import puppeteer, { Page } from "puppeteer";
 import { getCredentials } from "./credentials";
 import {
     DeviceList as Device,
@@ -7,18 +7,27 @@ import {
 import { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
 import { ContentItem } from "./types/GetContentOwnershipData";
 import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
-import fetch from "node-fetch";
-import { createWriteStream } from "fs";
+import path from "path";
+import fs from "fs";
+import chunk from "lodash/chunk";
+import cliProgress from "cli-progress";
+
+type Auth = { csrfToken: string; cookie: string };
 
 const OPTIONS = {
-    /** Pagination number to begin downloading from */
-    startingPage: 1,
-    /** If true, we will attempt to loop over pagination and download ALL books */
-    downloadAllPages: true,
     /** Base URL to get books from */
     baseUrl: "https://www.amazon.com.au",
+    /** Total number of items to download */
+    totalDownloads: 9999,
+    /** How many concurrent downloads to run */
+    downloadChunkSize: 25,
+    /** Offest which asset to begin downloading from (useful for resuming previous failures) */
+    startFromOffset: 0,
 };
 
+/**
+ * Creates a new browser session using puppeteer
+ */
 const login = async (page: Page) => {
     console.log("Getting credentials from 1Password");
     const { user, password, otp } = await getCredentials();
@@ -40,8 +49,9 @@ const login = async (page: Page) => {
     await page.waitForNavigation();
 };
 
-type Auth = { csrfToken: string; cookie: string };
-
+/**
+ * Extracts cookies and csrfToken from the current browser session
+ */
 const getAuth = async (page: Page): Promise<Auth> => {
     const cookie = (await page.cookies())
         .map((c) => c.name + "=" + c.value)
@@ -51,84 +61,9 @@ const getAuth = async (page: Page): Promise<Auth> => {
     return { cookie, csrfToken };
 };
 
-const wait = (milliseconds: number) =>
-    new Promise((r) => setTimeout(r, milliseconds));
-
-const downloadBooksOnCurrentPage = async (page: Page) => {
-    await page.waitForSelector(".Dropdown-module_container__S6U18");
-    const dropdowns = await page.$$(".Dropdown-module_container__S6U18");
-    const rows = await page.$$("#CONTENT_LIST tbody tr");
-    console.log("Found rows", dropdowns.length);
-
-    let currentRow = 0;
-    for (const moreActionsButton of dropdowns) {
-        const title = await rows[currentRow]?.$eval(
-            ".digital_entity_title",
-            (el) => el.textContent
-        );
-
-        console.log(`Starting row`, currentRow + 1, title);
-
-        // Open "More actions" dropdown
-        await moreActionsButton.click();
-
-        // Click the "download and transfer" button
-        const downloadMenuItem = await moreActionsButton.$(
-            ".Dropdown-module_dropdown_container__2YGLm > *:nth-child(2)"
-        );
-        await downloadMenuItem?.click();
-
-        // Select the first device that shows up
-        await (
-            await page.waitForSelector(
-                ".RadioButton-module_radio_container__3ni_P > span"
-            )
-        )?.click();
-
-        // Click the "Download" button in the modal
-        const confirmDownloadButton = await downloadMenuItem?.$(
-            ".DeviceDialogBox-module_button_container__1huSS > div:nth-child(2)"
-        );
-        await confirmDownloadButton?.click();
-
-        // Wait a bit, close the modal, wait a bit more
-        await wait(500);
-        await page.click("body");
-        await wait(500);
-        currentRow += 1;
-    }
-};
-
-const fullPupppeteerImpl = async (page: Page) => {
-    // Find total pages count:
-    await page.waitForSelector(".pagination .page-item");
-    const [currentPageLink, ...remainingPageLinks] = await page.$$(
-        ".pagination .page-item"
-    );
-
-    console.log("Pages other than this one: ", remainingPageLinks.length);
-
-    // Download 'first' page right now
-    console.log("Download initial page");
-    await downloadBooksOnCurrentPage(page);
-    console.log("Finished initial page");
-
-    if (OPTIONS.downloadAllPages) {
-        for (const _ of remainingPageLinks) {
-            console.log("Navigating to next page");
-            // Needs to be fetched each time due to navigation
-            const pageLink = await page.$(
-                ".pagination .page-item.active + .page-item"
-            );
-            await pageLink?.click();
-            await page.waitForNavigation();
-            console.log("Starting downloads for this page");
-            await downloadBooksOnCurrentPage(page);
-            console.log("Finished downloads for this page");
-        }
-    }
-};
-
+/**
+ * Generates the 'base' headers sent with most requests (includes cookie auth)
+ */
 const getHeaders = ({ cookie }: Auth) => {
     return {
         "User-Agent":
@@ -138,7 +73,10 @@ const getHeaders = ({ cookie }: Auth) => {
     };
 };
 
-const getDevice = async (auth: Auth) => {
+/**
+ * Gets the first 'KINDLE' device associated with the authed account
+ */
+const getKindleDevice = async (auth: Auth) => {
     const data = (await fetch(
         `${OPTIONS.baseUrl}/hz/mycd/digital-console/ajax`,
         {
@@ -165,7 +103,10 @@ const getDevice = async (auth: Auth) => {
     return kindleDevice;
 };
 
-const getAsins = async (auth: Auth) => {
+/**
+ * Get's all content items available to download
+ */
+const getAllContentItems = async (auth: Auth) => {
     const data = (await fetch(
         `${OPTIONS.baseUrl}/hz/mycd/digital-console/ajax`,
         {
@@ -194,6 +135,9 @@ const getAsins = async (auth: Auth) => {
     return data.GetContentOwnershipData.items;
 };
 
+/**
+ * Get the download *final* download URL for a given {@link ContentItem}
+ */
 const getDownloadUrl = async (
     auth: Auth,
     device: Device,
@@ -219,89 +163,149 @@ const getDownloadUrl = async (
     if (data.DownloadViaUSB.success !== true) {
         throw new Error("Failed to fetch download URL");
     }
-    return data.DownloadViaUSB.URL;
+
+    const redirectRes = await fetch(data.DownloadViaUSB.URL, {
+        headers: { Cookie: auth.cookie },
+        redirect: "manual",
+    });
+
+    const realDownloadUrl = redirectRes.headers.get("location");
+
+    if (!realDownloadUrl) {
+        throw new Error("Did not get a file download URL");
+    }
+
+    return realDownloadUrl;
 };
 
-import path from "path";
-
-import fs from "fs";
-
-async function waitForDownload(browser: Browser) {
-    const dmPage = await browser.newPage();
-    await dmPage.goto("chrome://downloads/");
-
-    await dmPage.bringToFront();
-    await dmPage.waitForFunction(
-        () => {
-            try {
-                const donePath = document
-                    .querySelector("downloads-manager")!
-                    .shadowRoot!.querySelector("#frb0")!
-                    .shadowRoot!.querySelector("#pauseOrResume")!;
-                if ((donePath as HTMLButtonElement).innerText != "Pause") {
-                    return true;
+/**
+ * Used to get progress updates on an inflight fetch response
+ */
+const observeResponse = (
+    response: Response,
+    fns: { onUpdate: (progress: number) => void; onComplete: () => void }
+) => {
+    const total = parseInt(response.headers.get("content-length") ?? "0", 10);
+    let loaded = 0;
+    const outputRes = new Response(
+        new ReadableStream({
+            async start(controller) {
+                const reader = response.body?.getReader();
+                if (!reader) throw new Error("Bad response");
+                for (;;) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    loaded += value.byteLength;
+                    fns.onUpdate(loaded);
+                    controller.enqueue(value);
                 }
-            } catch {
-                //
-            }
-        },
-        { timeout: 0 }
+                controller.close();
+                fns.onComplete();
+            },
+        })
     );
+    return { response: outputRes, totalSize: total };
+};
 
-    await dmPage.close();
-
-    console.log("Download finished");
-}
-
-const downloadBooks = async (
+/**
+ * Downloads a single book and updates a passed in {@link cliProgress.MultiBar}
+ */
+const downloadSingleBook = async (
     auth: Auth,
     device: Device,
-    books: ContentItem[],
-    page: Page,
-    browser: Browser
+    book: ContentItem,
+    progressBar: cliProgress.MultiBar
 ) => {
-    let i = 0;
-    for (const book of books) {
-        console.log("Fetching book", `${i + 1}/${books.length}`, book.title);
+    const downloadURL = await getDownloadUrl(auth, device, book);
 
-        const downloadUrl2 = await getDownloadUrl(auth, device, book);
+    const rawResponse = await fetch(downloadURL, {
+        headers: { Cookie: auth.cookie },
+    });
 
-        console.log(downloadUrl2);
+    const { response, totalSize } = observeResponse(rawResponse, {
+        onUpdate: (progress) => {
+            bar.update(progress, { filename: book.title });
+        },
+        onComplete: () => {
+            bar.stop();
+        },
+    });
 
-        await page.evaluate((downloadUrl2) => {
-            window.open(downloadUrl2);
-        }, downloadUrl2);
+    const bar = progressBar.create(totalSize, 0, { filename: book.title });
 
-        await wait(5000);
-        await waitForDownload(browser);
-        i += 1;
+    if (response.ok) {
+        const content = response.headers.get("content-disposition") ?? "";
+        const extension =
+            content
+                .split(";")
+                .map((i) => {
+                    const [key, value] = i.trim().split("=");
+                    return { key, value };
+                })
+                .find((i) => i.key === "filename")
+                ?.value.split(".")[1] ?? "azw3";
+
+        const filename = book.title + "." + extension;
+        const data = await response.arrayBuffer();
+        await fs.writeFileSync(
+            path.join(__dirname, "../downloads", filename),
+            Buffer.from(data)
+        );
+    } else {
+        console.error(
+            "Request failed with status",
+            response.status,
+            response.statusText
+        );
+        throw new Error("Download failed");
     }
 };
 
-const ajaxImpl = async (page: Page, browser: Browser) => {
-    const auth = await getAuth(page);
-    console.log("Got auth");
+/**
+ * Downloads a list of books and updates a {@link cliProgress.MultiBar}
+ */
+const downloadBooks = async (
+    auth: Auth,
+    device: Device,
+    books: ContentItem[]
+) => {
+    const bookChunks = chunk(
+        books.slice(OPTIONS.startFromOffset, OPTIONS.totalDownloads),
+        OPTIONS.downloadChunkSize
+    );
 
-    const device = await getDevice(auth);
-    console.log("Got device", device.deviceName);
-
-    const asins = await getAsins(auth);
-    console.log("Got asins", asins.length);
-
-    await downloadBooks(auth, device, asins, page, browser);
+    for (let index = 0; index < bookChunks.length; index++) {
+        const chunk = bookChunks[index];
+        console.log(
+            "Starting chunk of downloads",
+            `${index + 1}/${bookChunks.length}`
+        );
+        const progressBar = new cliProgress.MultiBar(
+            {
+                format: "| {bar} | {filename} | {value}/{total}",
+            },
+            cliProgress.Presets.shades_grey
+        );
+        await Promise.all(
+            chunk.map((b) => downloadSingleBook(auth, device, b, progressBar))
+        );
+        progressBar.stop();
+    }
 };
 
-(async () => {
+/**
+ * Application entry point
+ */
+const main = async () => {
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         userDataDir: "./user_data",
-        // slowMo: 50,
     });
     const page = await browser.newPage();
 
     // Navigate to content and devices
     await page.goto(
-        `${OPTIONS.baseUrl}/hz/mycd/digital-console/contentlist/booksPurchases/dateDsc?pageNumber=${OPTIONS.startingPage}`
+        `${OPTIONS.baseUrl}/hz/mycd/digital-console/contentlist/booksPurchases/dateDsc`
     );
 
     // If we find email input, it means we've been logged out
@@ -310,8 +314,18 @@ const ajaxImpl = async (page: Page, browser: Browser) => {
         await login(page);
     }
 
-    // fullPupppeteerImpl(page);
-    await ajaxImpl(page, browser);
+    const auth = await getAuth(page);
+    console.log("Got auth");
+
+    const device = await getKindleDevice(auth);
+    console.log("Got device", device.deviceName, device.deviceSerialNumber);
+
+    const books = await getAllContentItems(auth);
+    console.log("Got books", books.length);
+
+    await downloadBooks(auth, device, books);
 
     await browser.close();
-})();
+};
+
+main();
