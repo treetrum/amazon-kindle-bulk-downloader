@@ -8,8 +8,7 @@
     "checkin-lib": "git add lib",
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "ts-node src/index.ts",
-    "start:generate-env": "npm run generate-env && npm run start",
-    "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
+    "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +18,7 @@
     "@types/lodash": "^4.14.192",
     "@types/node-fetch": "^2.6.3",
     "@types/puppeteer": "^1.12.3",
+    "@types/yargs": "^17.0.24",
     "nodemon": "^2.0.22",
     "pre-commit": "^1.2.2",
     "ts-node": "^10.9.1",
@@ -30,7 +30,8 @@
     "fetch-cookie": "^2.1.0",
     "lodash": "^4.17.21",
     "node-fetch": "^2.6.9",
-    "puppeteer": "^19.8.5"
+    "puppeteer": "^19.8.5",
+    "yargs": "^17.7.1"
   },
   "pre-commit": [
     "build",

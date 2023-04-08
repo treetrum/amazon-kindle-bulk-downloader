@@ -20,7 +20,18 @@ Note that amazon credentials will need to be provided. Currently this script exp
 
 I recommend using the env template found in the root of the repo to create and .env file containing your specific vars.
 
-#### Watch Mode
+### CLI Arguments
+
+The following CLI arguments are made available to customise the downloader to your needs
+
+| Argument              | Default Value             | Description                                                                          |
+| --------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
+| `--baseUrl`           | https://www.amazon.com.au | Which Amazon base URL to use                                                         |
+| `--totalDownloads`    | 9999                      | Total number of downloads to do                                                      |
+| `--downloadChunkSize` | 25                        | Maximum number of concurrent downloads                                               |
+| `--startFromOffset`   | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts. |
+
+### Watch Mode
 
 ```bash
 npm run watch
@@ -28,16 +39,10 @@ npm run watch
 
 This will start the script in 'watch-mode' which is very useful for development. Every save will 'reload' the script and it will begin running immediately again.
 
-#### Live Mode
+### Live Mode
 
 You can run this standalone with:
 
 ```bash
 npm run start
-```
-
-Or you can run the following to do the same as above, but first generate the .env file using the [1Password CLI](https://developer.1password.com/docs/cli/) from the `.env.template` file in the root of the repo.
-
-```bash
-npm run start:generate-env
 ```

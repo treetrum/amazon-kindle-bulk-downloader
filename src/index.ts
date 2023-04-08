@@ -12,19 +12,10 @@ import fs from "fs";
 import chunk from "lodash/chunk";
 import cliProgress from "cli-progress";
 import dotenv from "dotenv";
+import yargs, { option } from "yargs";
+import { hideBin } from "yargs/helpers";
 
 type Auth = { csrfToken: string; cookie: string };
-
-const OPTIONS = {
-    /** Base URL to get books from */
-    baseUrl: "https://www.amazon.com.au",
-    /** Total number of items to download */
-    totalDownloads: 9999,
-    /** How many concurrent downloads to run */
-    downloadChunkSize: 25,
-    /** Offest which asset to begin downloading from (useful for resuming previous failures) */
-    startFromOffset: 0,
-};
 
 /**
  * Creates a new browser session using puppeteer
@@ -77,9 +68,9 @@ const getHeaders = ({ cookie }: Auth) => {
 /**
  * Gets the first 'KINDLE' device associated with the authed account
  */
-const getKindleDevice = async (auth: Auth) => {
+const getKindleDevice = async (auth: Auth, options: Options) => {
     const data = (await fetch(
-        `${OPTIONS.baseUrl}/hz/mycd/digital-console/ajax`,
+        `${options.baseUrl}/hz/mycd/digital-console/ajax`,
         {
             headers: getHeaders(auth),
             body: new URLSearchParams({
@@ -107,9 +98,9 @@ const getKindleDevice = async (auth: Auth) => {
 /**
  * Get's all content items available to download
  */
-const getAllContentItems = async (auth: Auth) => {
+const getAllContentItems = async (auth: Auth, options: Options) => {
     const data = (await fetch(
-        `${OPTIONS.baseUrl}/hz/mycd/digital-console/ajax`,
+        `${options.baseUrl}/hz/mycd/digital-console/ajax`,
         {
             headers: getHeaders(auth),
             body: new URLSearchParams({
@@ -142,9 +133,10 @@ const getAllContentItems = async (auth: Auth) => {
 const getDownloadUrl = async (
     auth: Auth,
     device: Device,
-    asin: ContentItem
+    asin: ContentItem,
+    options: Options
 ) => {
-    const data = (await fetch(`${OPTIONS.baseUrl}/hz/mycd/ajax`, {
+    const data = (await fetch(`${options.baseUrl}/hz/mycd/ajax`, {
         headers: getHeaders(auth),
         body: new URLSearchParams({
             csrfToken: auth.csrfToken,
@@ -215,11 +207,12 @@ const downloadSingleBook = async (
     auth: Auth,
     device: Device,
     book: ContentItem,
-    progressBar: cliProgress.MultiBar
+    progressBar: cliProgress.MultiBar,
+    options: Options
 ) => {
     const bar = progressBar.create(1, 0, { filename: book.title });
 
-    const downloadURL = await getDownloadUrl(auth, device, book);
+    const downloadURL = await getDownloadUrl(auth, device, book, options);
 
     const rawResponse = await fetch(downloadURL, {
         headers: { Cookie: auth.cookie },
@@ -270,11 +263,12 @@ const downloadSingleBook = async (
 const downloadBooks = async (
     auth: Auth,
     device: Device,
-    books: ContentItem[]
+    books: ContentItem[],
+    options: Options
 ) => {
     const bookChunks = chunk(
-        books.slice(OPTIONS.startFromOffset, OPTIONS.totalDownloads),
-        OPTIONS.downloadChunkSize
+        books.slice(options.startFromOffset, options.totalDownloads),
+        options.downloadChunkSize
     );
 
     for (let index = 0; index < bookChunks.length; index++) {
@@ -292,7 +286,9 @@ const downloadBooks = async (
             cliProgress.Presets.shades_grey
         );
         await Promise.all(
-            chunk.map((b) => downloadSingleBook(auth, device, b, progressBar))
+            chunk.map((b) =>
+                downloadSingleBook(auth, device, b, progressBar, options)
+            )
         );
         progressBar.stop();
     }
@@ -301,7 +297,7 @@ const downloadBooks = async (
 /**
  * Application entry point
  */
-const main = async () => {
+const main = async (options: Options) => {
     dotenv.config();
 
     const browser = await puppeteer.launch({
@@ -312,7 +308,7 @@ const main = async () => {
 
     // Navigate to content and devices
     await page.goto(
-        `${OPTIONS.baseUrl}/hz/mycd/digital-console/contentlist/booksPurchases/dateDsc`
+        `${options.baseUrl}/hz/mycd/digital-console/contentlist/booksPurchases/dateDsc`
     );
 
     // If we find email input, it means we've been logged out
@@ -324,15 +320,48 @@ const main = async () => {
     const auth = await getAuth(page);
     console.log("Got auth");
 
-    const device = await getKindleDevice(auth);
+    const device = await getKindleDevice(auth, options);
     console.log("Got device", device.deviceName, device.deviceSerialNumber);
 
-    const books = await getAllContentItems(auth);
+    const books = await getAllContentItems(auth, options);
     console.log("Got books", books.length);
 
-    await downloadBooks(auth, device, books);
+    await downloadBooks(auth, device, books, options);
 
     await browser.close();
 };
 
-main();
+type Options = {
+    baseUrl: string;
+    totalDownloads: number;
+    downloadChunkSize: number;
+    startFromOffset: number;
+};
+
+(async () => {
+    const args = await yargs(hideBin(process.argv))
+        .option("baseUrl", {
+            type: "string",
+            default: "https://www.amazon.com.au",
+            description: "Which Amazon base URL to use",
+        })
+        .option("totalDownloads", {
+            type: "number",
+            default: 9999,
+            description: "Total number of downloads to do",
+        })
+        .option("downloadChunkSize", {
+            type: "number",
+            default: 25,
+            description: "Maximum number of concurrent downloads",
+        })
+        .option("startFromOffset", {
+            type: "number",
+            default: 0,
+            description:
+                "Index offset to begin downloading from. Allows resuming of previous failed attempts.",
+        })
+        .parse();
+
+    main(args);
+})();
