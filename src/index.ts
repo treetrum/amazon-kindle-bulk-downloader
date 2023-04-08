@@ -11,6 +11,7 @@ import path from "path";
 import fs from "fs";
 import chunk from "lodash/chunk";
 import cliProgress from "cli-progress";
+import dotenv from "dotenv";
 
 type Auth = { csrfToken: string; cookie: string };
 
@@ -216,6 +217,8 @@ const downloadSingleBook = async (
     book: ContentItem,
     progressBar: cliProgress.MultiBar
 ) => {
+    const bar = progressBar.create(1, 0, { filename: book.title });
+
     const downloadURL = await getDownloadUrl(auth, device, book);
 
     const rawResponse = await fetch(downloadURL, {
@@ -231,10 +234,10 @@ const downloadSingleBook = async (
         },
     });
 
-    const bar = progressBar.create(totalSize, 0, { filename: book.title });
+    bar.start(totalSize, 0);
 
     if (response.ok) {
-        const content = response.headers.get("content-disposition") ?? "";
+        const content = rawResponse.headers.get("content-disposition") ?? "";
         const extension =
             content
                 .split(";")
@@ -282,6 +285,8 @@ const downloadBooks = async (
         );
         const progressBar = new cliProgress.MultiBar(
             {
+                hideCursor: true,
+                clearOnComplete: false,
                 format: "| {bar} | {filename} | {value}/{total}",
             },
             cliProgress.Presets.shades_grey
@@ -297,6 +302,8 @@ const downloadBooks = async (
  * Application entry point
  */
 const main = async () => {
+    dotenv.config();
+
     const browser = await puppeteer.launch({
         headless: true,
         userDataDir: "./user_data",

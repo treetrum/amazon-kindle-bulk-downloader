@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build:live",
     "build": "tsc -p .",
-    "build:live": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
-    "checkin-lib": "git add lib"
+    "checkin-lib": "git add lib",
+    "generate-env": "op inject -i .env.template -o .env -f",
+    "start": "ts-node src/index.ts",
+    "start:generate-env": "npm run generate-env && npm run start",
+    "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
   },
   "keywords": [],
   "author": "",
@@ -24,6 +26,7 @@
   },
   "dependencies": {
     "cli-progress": "^3.12.0",
+    "dotenv": "^16.0.3",
     "fetch-cookie": "^2.1.0",
     "lodash": "^4.17.21",
     "node-fetch": "^2.6.9",
