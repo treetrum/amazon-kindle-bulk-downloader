@@ -31,7 +31,7 @@ export interface ContentItem {
     acquiredDate: string;
     isDeleteRestrictionEnabled: boolean;
     isGift: boolean;
-    collectionList: any[];
+    collectionList: unknown[];
     contentCategoryType: string;
     orderDetailURL: string;
     showProductDetails: boolean;
