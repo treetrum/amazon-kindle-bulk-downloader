@@ -6,7 +6,7 @@ export interface GetDevicesOverviewResponse {
 
 export interface GetDevicesOverview {
     deviceList: DeviceList[];
-    devicePromotionOfferDataList: any[];
+    devicePromotionOfferDataList: unknown[];
     successful: boolean;
 }
 

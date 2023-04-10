@@ -1,5 +1,5 @@
 {
-  "name": "puppeteer-test",
+  "name": "amazon-kindle-bulk-downloader",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,10 @@
     "checkin-lib": "git add lib",
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "ts-node src/index.ts",
-    "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts"
+    "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
+    "prepare": "husky install",
+    "typecheck": "tsc --project ./tsconfig.json",
+    "lint": "eslint src/"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +22,10 @@
     "@types/node-fetch": "^2.6.3",
     "@types/puppeteer": "^1.12.3",
     "@types/yargs": "^17.0.24",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "eslint": "^8.38.0",
+    "husky": "^8.0.3",
     "nodemon": "^2.0.22",
     "pre-commit": "^1.2.2",
     "ts-node": "^10.9.1",

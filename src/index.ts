@@ -12,7 +12,7 @@ import fs from "fs";
 import chunk from "lodash/chunk";
 import cliProgress from "cli-progress";
 import dotenv from "dotenv";
-import yargs, { option } from "yargs";
+import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 type Auth = { csrfToken: string; cookie: string };
@@ -48,7 +48,7 @@ const getAuth = async (page: Page): Promise<Auth> => {
     const cookie = (await page.cookies())
         .map((c) => c.name + "=" + c.value)
         .join(";");
-    // @ts-expect-error
+    // @ts-expect-error haven't bothered to add custom type defs for this
     const csrfToken = await page.evaluate(() => window.csrfToken);
     return { cookie, csrfToken };
 };
