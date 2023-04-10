@@ -36,7 +36,7 @@
     "dotenv": "^16.0.3",
     "fetch-cookie": "^2.1.0",
     "lodash": "^4.17.21",
-    "node-fetch": "^2.6.9",
+    "node-fetch": "^3.3.1",
     "puppeteer": "^19.8.5",
     "yargs": "^17.7.1"
   },
