@@ -24,7 +24,7 @@
     "@types/yargs": "^17.0.24",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
-    "eslint": "^8.38.0",
+    "eslint": "^8.39.0",
     "husky": "^8.0.3",
     "nodemon": "^2.0.22",
     "pre-commit": "^1.2.2",
