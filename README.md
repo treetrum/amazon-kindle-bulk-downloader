@@ -1,6 +1,6 @@
 # Amazon Kindle eBook Bulk Downloader
 
-Used to download Kindle eBooks in a _more_ automated fashion than is normally permitted.
+Designed for downloading your Kindle eBooks in a more automated fashion than is typically permitted, this tool allows you to create backup copies of the books you've already purchased.
 
 ## Setup
 
