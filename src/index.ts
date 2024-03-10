@@ -25,20 +25,31 @@ const login = async (page: Page) => {
     const { user, password, otp } = await getCredentials();
     console.log("Got credentials from 1Password");
 
-    console.log("Filling username");
-    await page.type('input[type="email"]', user);
-    await page.click("#continue");
-    await page.waitForNavigation();
+    const emailInput = await page.$('input[type="email"]');
+    if (emailInput) {
+        console.log("Filling username");
+        await emailInput.type(user);
+        await page.click("#continue");
+        await page.waitForNavigation();
+    }
 
-    console.log("Filling password");
-    await page.type('input[type="password"]', password);
-    await page.click("#signInSubmit");
-    await page.waitForNavigation();
+    const passwordInput = await page.$('input[type="password"]');
+    if (passwordInput) {
+        console.log("Filling password");
+        await passwordInput.type(password);
+        await page.click("input[name=rememberMe]");
+        await page.click("#signInSubmit");
+        await page.waitForNavigation();
+    }
 
-    console.log("Filling OTP");
-    await page.type('input[type="tel"]', otp);
-    await page.click("#auth-signin-button");
-    await page.waitForNavigation();
+    const otpInput = await page.$("#auth-mfa-otpcode");
+    if (otpInput) {
+        console.log("Filling OTP");
+        await otpInput.type(otp);
+        await page.click("#auth-mfa-remember-device");
+        await page.click("#auth-signin-button");
+        await page.waitForNavigation();
+    }
 };
 
 /**
@@ -301,8 +312,8 @@ const main = async (options: Options) => {
     dotenv.config();
 
     const browser = await puppeteer.launch({
-        headless: true,
-        userDataDir: "./user_data",
+        headless: false,
+        // userDataDir: "./user_data",
     });
     const page = await browser.newPage();
 
