@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "cli-progress": "^3.12.0",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.4.5",
     "fetch-cookie": "^2.1.0",
     "lodash": "^4.17.21",
     "node-fetch": "^3.3.1",
