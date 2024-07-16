@@ -18,7 +18,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
-    "@types/lodash": "^4.17.6",
+    "@types/lodash": "^4.17.7",
     "@types/node-fetch": "^2.6.3",
     "@types/puppeteer": "^7.0.4",
     "@types/yargs": "^17.0.24",
