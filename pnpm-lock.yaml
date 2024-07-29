@@ -55,8 +55,8 @@ importers:
         specifier: ^8.44.0
         version: 8.57.0
       husky:
-        specifier: ^9.1.1
-        version: 9.1.1
+        specifier: ^9.1.4
+        version: 9.1.4
       nodemon:
         specifier: ^3.1.4
         version: 3.1.4
@@ -690,8 +690,8 @@ packages:
     resolution: {integrity: sha512-wlwpilI7YdjSkWaQ/7omYBMTliDcmCN8OLihO6I9B86g06lMyAoqgoDpV0XqoaPOKj+0DIdAvnsWfyAAhmimcg==}
     engines: {node: '>= 14'}
 
-  husky@9.1.1:
-    resolution: {integrity: sha512-fCqlqLXcBnXa/TJXmT93/A36tJsjdJkibQ1MuIiFyCCYUlpYpIaj2mv1w+3KR6Rzu1IC3slFTje5f6DUp2A2rg==}
+  husky@9.1.4:
+    resolution: {integrity: sha512-bho94YyReb4JV7LYWRWxZ/xr6TtOTt8cMfmQ39MQYJ7f/YE268s3GdghGwi+y4zAeqewE5zYLvuhV0M0ijsDEA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1979,7 +1979,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  husky@9.1.1: {}
+  husky@9.1.4: {}
 
   ieee754@1.2.1: {}
 
