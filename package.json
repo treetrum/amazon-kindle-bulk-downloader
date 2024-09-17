@@ -19,7 +19,6 @@
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
     "@types/lodash": "^4.17.7",
-    "@types/node-fetch": "^2.6.3",
     "@types/puppeteer": "^7.0.4",
     "@types/yargs": "^17.0.24",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -27,21 +26,14 @@
     "eslint": "^8.44.0",
     "husky": "^9.1.4",
     "nodemon": "^3.1.4",
-    "pre-commit": "^1.2.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.5.4"
   },
   "dependencies": {
     "cli-progress": "^3.12.0",
     "dotenv": "^16.4.5",
-    "fetch-cookie": "^3.0.1",
     "lodash": "^4.17.21",
-    "node-fetch": "^3.3.1",
     "puppeteer": "^22.14.0",
     "yargs": "^17.7.1"
-  },
-  "pre-commit": [
-    "build",
-    "checkin-lib"
-  ]
+  }
 }
