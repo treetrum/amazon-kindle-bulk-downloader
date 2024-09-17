@@ -9,7 +9,7 @@
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "ts-node src/index.ts",
     "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
-    "prepare": "husky install",
+    "prepare": "husky",
     "typecheck": "tsc --project ./tsconfig.json",
     "lint": "eslint src/"
   },
