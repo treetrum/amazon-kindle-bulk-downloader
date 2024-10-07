@@ -18,7 +18,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
-    "@types/lodash": "^4.17.7",
+    "@types/lodash": "^4.17.10",
     "@types/puppeteer": "^7.0.4",
     "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
