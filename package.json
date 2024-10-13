@@ -19,6 +19,8 @@
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
     "@types/lodash": "^4.17.10",
+    "@types/node": "^22.7.5",
+    "@types/prompts": "^2.4.9",
     "@types/puppeteer": "^7.0.4",
     "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -33,6 +35,7 @@
     "cli-progress": "^3.12.0",
     "dotenv": "^16.4.5",
     "lodash": "^4.17.21",
+    "prompts": "^2.4.2",
     "puppeteer": "^23.5.1",
     "yargs": "^17.7.1"
   }

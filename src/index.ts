@@ -14,6 +14,7 @@ import cliProgress from "cli-progress";
 import dotenv from "dotenv";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import prompts from "prompts";
 
 type Auth = { csrfToken: string; cookie: string };
 
@@ -21,9 +22,9 @@ type Auth = { csrfToken: string; cookie: string };
  * Creates a new browser session using puppeteer
  */
 const login = async (page: Page) => {
-    console.log("Getting credentials from 1Password");
+    console.log("Getting credentials");
     const { user, password, otp } = await getCredentials();
-    console.log("Got credentials from 1Password");
+    console.log("Got credentials");
 
     const emailInput = await page.$('input[type="email"]');
     if (emailInput) {
@@ -50,6 +51,17 @@ const login = async (page: Page) => {
         await page.click("#auth-signin-button");
         await page.waitForNavigation();
     }
+};
+
+/**
+ * Pauses the script until user confirms login. Use when automated login doesn't work.
+ */
+export const manualLogin = async () => {
+    await prompts({
+        name: "Waiting to confirm login",
+        type: "confirm",
+        message: "Press enter once you've logged in",
+    });
 };
 
 /**
@@ -322,10 +334,14 @@ const main = async (options: Options) => {
         `${options.baseUrl}/hz/mycd/digital-console/contentlist/booksPurchases/dateDsc`
     );
 
-    // If we find email input, it means we've been logged out
-    const emailInput = await page.$('input[type="email"]');
-    if (emailInput) {
-        await login(page);
+    if (options.manualAuth) {
+        await manualLogin();
+    } else {
+        // If we find email input, it means we've been logged out
+        const emailInput = await page.$('input[type="email"]');
+        if (emailInput) {
+            await login(page);
+        }
     }
 
     const auth = await getAuth(page);
@@ -347,6 +363,7 @@ type Options = {
     totalDownloads: number;
     downloadChunkSize: number;
     startFromOffset: number;
+    manualAuth: boolean;
 };
 
 (async () => {
@@ -371,6 +388,12 @@ type Options = {
             default: 0,
             description:
                 "Index offset to begin downloading from. Allows resuming of previous failed attempts.",
+        })
+        .option("manualAuth", {
+            type: "boolean",
+            default: false,
+            description:
+                "Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working.",
         })
         .parse();
 
