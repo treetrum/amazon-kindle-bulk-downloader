@@ -266,8 +266,11 @@ const downloadSingleBook = async (
 
         const filename = book.title + "." + extension;
         const data = await response.arrayBuffer();
-        await fs.writeFileSync(
-            path.join(__dirname, "../downloads", filename),
+
+        const downloadsDir = path.join(__dirname, "../downloads");
+        fs.mkdir(downloadsDir, { recursive: true });
+        await fs.writeFile(
+            path.join(downloadsDir, filename),
             Buffer.from(data)
         );
     } else {
