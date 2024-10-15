@@ -8,8 +8,7 @@ import { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData
 import { ContentItem } from "./types/GetContentOwnershipData";
 import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
 import path from "path";
-import fs from "fs";
-import chunk from "lodash/chunk";
+import fs from "fs/promises";
 import cliProgress from "cli-progress";
 import dotenv from "dotenv";
 import yargs from "yargs";
@@ -247,6 +246,8 @@ const downloadSingleBook = async (
         },
         onComplete: () => {
             bar.stop();
+            progressBar.remove(bar);
+            progressBar.log(`Downloaded: ${book.title}\n`);
         },
     });
 
@@ -283,6 +284,32 @@ const downloadSingleBook = async (
     }
 };
 
+/** Limits passed in promises to a maximum amount of concurrency */
+async function limitConcurrency(
+    promises: (() => Promise<unknown>)[],
+    limit: number
+): Promise<void> {
+    const executing: Promise<unknown>[] = [];
+
+    for (const promise of promises) {
+        const p = promise();
+        executing.push(p);
+
+        if (executing.length >= limit) {
+            // Wait for the first one to finish
+            await Promise.race(executing);
+            // Remove the completed promise
+            executing.splice(
+                executing.findIndex((p) => p === p),
+                1
+            );
+        }
+    }
+
+    // Wait for the remaining promises to finish
+    await Promise.all(executing);
+}
+
 /**
  * Downloads a list of books and updates a {@link cliProgress.MultiBar}
  */
@@ -292,32 +319,24 @@ const downloadBooks = async (
     books: ContentItem[],
     options: Options
 ) => {
-    const bookChunks = chunk(
-        books.slice(options.startFromOffset, options.totalDownloads),
-        options.downloadChunkSize
+    const progressBar = new cliProgress.MultiBar(
+        {
+            hideCursor: true,
+            clearOnComplete: false,
+            format: "| {bar} | {filename} | {value}/{total}",
+        },
+        cliProgress.Presets.shades_grey
     );
-
-    for (let index = 0; index < bookChunks.length; index++) {
-        const chunk = bookChunks[index];
-        console.log(
-            "Starting chunk of downloads",
-            `${index + 1}/${bookChunks.length}`
-        );
-        const progressBar = new cliProgress.MultiBar(
-            {
-                hideCursor: true,
-                clearOnComplete: false,
-                format: "| {bar} | {filename} | {value}/{total}",
-            },
-            cliProgress.Presets.shades_grey
-        );
-        await Promise.all(
-            chunk.map((b) =>
-                downloadSingleBook(auth, device, b, progressBar, options)
-            )
-        );
-        progressBar.stop();
-    }
+    await limitConcurrency(
+        books
+            .slice(options.startFromOffset, options.totalDownloads)
+            .map(
+                (b) => () =>
+                    downloadSingleBook(auth, device, b, progressBar, options)
+            ),
+        options.maxConcurrency
+    );
+    progressBar.stop();
 };
 
 /**
@@ -364,7 +383,7 @@ const main = async (options: Options) => {
 type Options = {
     baseUrl: string;
     totalDownloads: number;
-    downloadChunkSize: number;
+    maxConcurrency: number;
     startFromOffset: number;
     manualAuth: boolean;
 };
@@ -381,7 +400,7 @@ type Options = {
             default: 9999,
             description: "Total number of downloads to do",
         })
-        .option("downloadChunkSize", {
+        .option("maxConcurrency", {
             type: "number",
             default: 25,
             description: "Maximum number of concurrent downloads",

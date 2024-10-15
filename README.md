@@ -24,13 +24,13 @@ I recommend using the env template found in the root of the repo to create and .
 
 The following CLI arguments are made available to customise the downloader to your needs
 
-| Argument              | Default Value             | Description                                                                                                                      |
-| --------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--baseUrl`           | https://www.amazon.com.au | Which Amazon base URL to use                                                                                                     |
-| `--totalDownloads`    | 9999                      | Total number of downloads to do                                                                                                  |
-| `--downloadChunkSize` | 25                        | Maximum number of concurrent downloads                                                                                           |
-| `--startFromOffset`   | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts.                                             |
-| `--manualAuth`        | false                     | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
+| Argument            | Default Value             | Description                                                                                                                      |
+| ------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--baseUrl`         | https://www.amazon.com.au | Which Amazon base URL to use                                                                                                     |
+| `--totalDownloads`  | 9999                      | Total number of downloads to do                                                                                                  |
+| `--maxConcurrency`  | 10                        | Maximum number of concurrent downloads                                                                                           |
+| `--startFromOffset` | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts.                                             |
+| `--manualAuth`      | false                     | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
 
 ### Watch Mode
 
