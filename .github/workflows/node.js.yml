@@ -2,9 +2,9 @@ name: Node
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main"] # whenever a commit is pushed to the main branch (i.e. pr merge)
   pull_request:
-    branches: ["main"]
+    branches: ["main"] # whenever a PR is opened targeting main
 
 jobs:
   build:
