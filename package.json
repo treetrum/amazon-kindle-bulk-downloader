@@ -36,7 +36,7 @@
     "dotenv": "^16.4.5",
     "lodash": "^4.17.21",
     "prompts": "^2.4.2",
-    "puppeteer": "^23.7.1",
+    "puppeteer": "^23.9.0",
     "yargs": "^17.7.1"
   }
 }
