@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
     "@types/lodash": "^4.17.13",
-    "@types/node": "^22.10.1",
+    "@types/node": "^22.10.3",
     "@types/prompts": "^2.4.9",
     "@types/puppeteer": "^7.0.4",
     "@types/yargs": "^17.0.33",
