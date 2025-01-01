@@ -27,7 +27,7 @@
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
     "husky": "^9.1.7",
-    "nodemon": "^3.1.7",
+    "nodemon": "^3.1.9",
     "ts-node": "^10.9.1",
     "typescript": "^5.7.2"
   },
