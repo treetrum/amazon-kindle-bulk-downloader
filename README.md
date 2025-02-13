@@ -14,7 +14,7 @@ npm install
 
 Note that amazon credentials will need to be provided. Currently this script expects them to be in the following ENV variables:
 
--   USERNAME
+-   AMAZON_USER
 -   PASSWORD
 -   OTP
 
