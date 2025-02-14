@@ -29,15 +29,12 @@ const login = async (page: Page) => {
     if (emailInput) {
         console.log("Filling username");
         await emailInput.type(user);
-        await page.click("#continue");
-        await page.waitForNavigation();
     }
 
     const passwordInput = await page.$('input[type="password"]');
     if (passwordInput) {
         console.log("Filling password");
         await passwordInput.type(password);
-        await page.click("input[name=rememberMe]");
         await page.click("#signInSubmit");
         await page.waitForNavigation();
     }
