@@ -262,7 +262,7 @@ const downloadSingleBook = async (
                 .find((i) => i.key === "filename")
                 ?.value.split(".")[1] ?? "azw3";
 
-        const filename = `${book.title.replace(': ',' - ')}.${extension}`;
+        const filename = `${book.title.replace(/: /g, ' - ').replace(/"/g, '')}.${extension}`;
         const data = await response.arrayBuffer();
 
         const downloadsDir = path.join(__dirname, "../downloads");
