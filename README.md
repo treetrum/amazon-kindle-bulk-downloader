@@ -10,13 +10,19 @@ Install NPM dependencies with
 npm install
 ```
 
+Install the Chrome browser for pupeteer to use
+
+```bash
+npx puppeteer browsers install chrome
+```
+
 ## Running
 
 Note that amazon credentials will need to be provided. Currently this script expects them to be in the following ENV variables:
 
--   AMAZON_USER
--   PASSWORD
--   OTP
+- AMAZON_USER
+- PASSWORD
+- OTP
 
 I recommend using the env template found in the root of the repo to create and .env file containing your specific vars.
 

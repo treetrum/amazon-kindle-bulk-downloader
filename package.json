@@ -5,38 +5,40 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p .",
-    "checkin-lib": "git add lib",
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "ts-node src/index.ts",
     "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
     "prepare": "husky",
     "typecheck": "tsc --project ./tsconfig.json",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "prettier": "prettier . --check"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
-    "@types/lodash": "^4.17.13",
-    "@types/node": "^22.10.1",
+    "@types/lodash": "^4.17.15",
+    "@types/node": "^22.13.4",
     "@types/prompts": "^2.4.9",
-    "@types/puppeteer": "^7.0.4",
     "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
     "husky": "^9.1.7",
-    "nodemon": "^3.1.7",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.7.2"
+    "nodemon": "^3.1.9",
+    "pnpm": "^10.4.0",
+    "prettier": "^3.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "cli-progress": "^3.12.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
     "prompts": "^2.4.2",
-    "puppeteer": "^23.9.0",
-    "yargs": "^17.7.1"
+    "puppeteer": "^24.2.1",
+    "sanitize-filename": "^1.6.3",
+    "yargs": "^17.7.2"
   }
 }

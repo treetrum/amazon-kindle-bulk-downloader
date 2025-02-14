@@ -21,5 +21,6 @@ jobs:
         with:
           node-version: 20
       - run: pnpm install
+      - run: pnpm run prettier
       - run: pnpm run lint
       - run: pnpm run build
