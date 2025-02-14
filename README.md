@@ -4,10 +4,10 @@ Designed for downloading your Kindle eBooks in a more automated fashion than is 
 
 ## Setup
 
-Install NPM dependencies with
+Install dependencies with
 
 ```bash
-npm install
+pnpm install
 ```
 
 Install the Chrome browser for pupeteer to use
@@ -41,7 +41,7 @@ The following CLI arguments are made available to customise the downloader to yo
 ### Watch Mode
 
 ```bash
-npm run watch
+pnpm run watch
 ```
 
 This will start the script in 'watch-mode' which is very useful for development. Every save will 'reload' the script and it will begin running immediately again.
@@ -51,5 +51,5 @@ This will start the script in 'watch-mode' which is very useful for development.
 You can run this standalone with:
 
 ```bash
-npm run start
+pnpm run start
 ```
