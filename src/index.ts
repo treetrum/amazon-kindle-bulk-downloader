@@ -14,6 +14,7 @@ import dotenv from "dotenv";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import prompts from "prompts";
+import sanitize from "sanitize-filename";
 
 type Auth = { csrfToken: string; cookie: string };
 
@@ -67,8 +68,9 @@ const getAuth = async (page: Page): Promise<Auth> => {
   const cookie = (await page.browser().cookies())
     .map((c) => c.name + "=" + c.value)
     .join(";");
-  // @ts-expect-error haven't bothered to add custom type defs for this
+  // @ts-expect-error - This is set by the page
   const csrfToken = await page.evaluate(() => window.csrfToken);
+  if (!csrfToken) throw new Error("Failed to get csrfToken");
   return { cookie, csrfToken };
 };
 
@@ -223,7 +225,8 @@ const downloadSingleBook = async (
   progressBar: cliProgress.MultiBar,
   options: Options
 ) => {
-  const bar = progressBar.create(1, 0, { filename: book.title });
+  const safeFileName = sanitize(book.title);
+  const bar = progressBar.create(1, 0, { filename: safeFileName });
 
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
@@ -233,12 +236,12 @@ const downloadSingleBook = async (
 
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => {
-      bar.update(progress, { filename: book.title });
+      bar.update(progress, { filename: safeFileName });
     },
     onComplete: () => {
       bar.stop();
       progressBar.remove(bar);
-      progressBar.log(`Downloaded: ${book.title}\n`);
+      progressBar.log(`Downloaded: ${safeFileName}\n`);
     },
   });
 
@@ -256,9 +259,7 @@ const downloadSingleBook = async (
         .find((i) => i.key === "filename")
         ?.value.split(".")[1] ?? "azw3";
 
-    const filename = `${book.title
-      .replace(/: /g, " - ")
-      .replace(/"/g, "")}.${extension}`;
+    const filename = `${safeFileName}.${extension}`;
     const data = await response.arrayBuffer();
 
     const downloadsDir = path.join(__dirname, "../downloads");
