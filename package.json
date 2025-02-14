@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p .",
-    "checkin-lib": "git add lib",
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "ts-node src/index.ts",
     "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
