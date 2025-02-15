@@ -1,20 +1,20 @@
+import cliProgress from "cli-progress";
+import dotenv from "dotenv";
+import fs from "fs/promises";
+import path from "path";
+import prompts from "prompts";
 import puppeteer, { Page } from "puppeteer";
+import sanitize from "sanitize-filename";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import { getCredentials } from "./credentials";
+import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
+import { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
+import { ContentItem } from "./types/GetContentOwnershipData";
 import {
   DeviceList as Device,
   GetDevicesOverviewResponse,
 } from "./types/GetDevicesOverviewResponse";
-import { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
-import { ContentItem } from "./types/GetContentOwnershipData";
-import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
-import path from "path";
-import fs from "fs/promises";
-import cliProgress from "cli-progress";
-import dotenv from "dotenv";
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import prompts from "prompts";
-import sanitize from "sanitize-filename";
 
 type Auth = { csrfToken: string; cookie: string };
 
