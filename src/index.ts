@@ -1,22 +1,20 @@
-import cliProgress from "cli-progress";
-import dotenv from "dotenv";
-import fs from "fs/promises";
-import path from "path";
-import prompts from "prompts";
 import puppeteer, { Page } from "puppeteer";
-import sanitize from "sanitize-filename";
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
 import { getCredentials } from "./credentials";
-import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
-import {
-  ContentItem,
-  GetContentOwnershipDataResponse,
-} from "./types/GetContentOwnershipData";
 import {
   DeviceList as Device,
   GetDevicesOverviewResponse,
 } from "./types/GetDevicesOverviewResponse";
+import { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
+import { ContentItem } from "./types/GetContentOwnershipData";
+import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
+import path from "path";
+import fs from "fs/promises";
+import cliProgress from "cli-progress";
+import dotenv from "dotenv";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import prompts from "prompts";
+import sanitize from "sanitize-filename";
 
 type Auth = { csrfToken: string; cookie: string };
 
@@ -103,7 +101,6 @@ const getKindleDevice = async (auth: Auth, options: Options) => {
     }),
     method: "POST",
   }).then((res) => res.json())) as GetDevicesOverviewResponse;
-
   if (data.success !== true) {
     throw new Error(`getDevice failed: ${data.error}`);
   }
@@ -232,9 +229,7 @@ const getDownloadUrl = async (
  */
 const observeResponse = (
   response: Response,
-  progressBar: cliProgress.SingleBar,
-  filename: string,
-  batchInfo: { currentBatch: number; totalBatches: number }
+  fns: { onUpdate: (progress: number) => void; onComplete: () => void }
 ) => {
   const total = parseInt(response.headers.get("content-length") ?? "0", 10);
   let loaded = 0;
@@ -247,15 +242,11 @@ const observeResponse = (
           const { done, value } = await reader.read();
           if (done) break;
           loaded += value.byteLength;
-          progressBar.update(loaded, {
-            filename,
-            currentBatch: batchInfo.currentBatch,
-            totalBatches: batchInfo.totalBatches,
-          });
+          fns.onUpdate(loaded);
           controller.enqueue(value);
         }
         controller.close();
-        progressBar.stop();
+        fns.onComplete();
       },
     })
   );
@@ -274,11 +265,12 @@ const downloadSingleBook = async (
   batchInfo: { currentBatch: number; totalBatches: number }
 ) => {
   const safeFileName = sanitize(book.title);
-  const bar = progressBar.create(1, 0, {
+  const barInfo = {
     filename: safeFileName,
     currentBatch: batchInfo.currentBatch,
     totalBatches: batchInfo.totalBatches,
-  });
+  };
+  const bar = progressBar.create(1, 0, barInfo);
 
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
@@ -286,12 +278,14 @@ const downloadSingleBook = async (
     headers: { Cookie: auth.cookie },
   });
 
-  const { response, totalSize } = observeResponse(
-    rawResponse,
-    bar,
-    safeFileName,
-    batchInfo
-  );
+  const { response, totalSize } = observeResponse(rawResponse, {
+    onUpdate: (progress) => {
+      bar.update(progress, barInfo);
+    },
+    onComplete: () => {
+      bar.stop();
+    },
+  });
 
   bar.start(totalSize, 0);
 
