@@ -124,9 +124,16 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
       activity: "GetContentOwnershipData",
       activityInput: JSON.stringify({
         contentType: "Ebook",
-        contentCategoryReference: "booksPurchases",
+        contentCategoryReference: "booksAll",
         itemStatusList: ["Active"],
-        originTypes: ["Purchase", "Pottermore"],
+        originTypes: [
+          "Purchase",
+          "Pottermore",
+          "ComicsUnlimited",
+          "KOLL",
+          "Prime",
+          "Comixology",
+        ],
         fetchCriteria: {
           sortOrder: "DESCENDING",
           sortIndex: "DATE",
@@ -343,7 +350,7 @@ const main = async (options: Options) => {
 
   // Navigate to content and devices
   await page.goto(
-    `${options.baseUrl}/hz/mycd/digital-console/contentlist/booksPurchases/dateDsc`
+    `${options.baseUrl}/hz/mycd/digital-console/contentlist/booksAll/dateDsc`
   );
 
   if (options.manualAuth) {
