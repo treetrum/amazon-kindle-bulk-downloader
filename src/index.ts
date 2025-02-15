@@ -80,7 +80,7 @@ const getAuth = async (page: Page): Promise<Auth> => {
 const getHeaders = ({ cookie }: Auth) => {
   return {
     "User-Agent":
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/111.0",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
     Cookie: cookie,
     "Content-Type": "application/x-www-form-urlencoded",
   };
@@ -96,7 +96,7 @@ const getKindleDevice = async (auth: Auth, options: Options) => {
       csrfToken: auth.csrfToken,
       activity: "GetDevicesOverview",
       activityInput: JSON.stringify({
-        surfaceType: "Desktop",
+        surfaceType: "LargeDesktop",
       }),
     }),
     method: "POST",
@@ -117,36 +117,67 @@ const getKindleDevice = async (auth: Auth, options: Options) => {
  * Get's all content items available to download
  */
 const getAllContentItems = async (auth: Auth, options: Options) => {
-  const data = (await fetch(`${options.baseUrl}/hz/mycd/digital-console/ajax`, {
-    headers: getHeaders(auth),
-    body: new URLSearchParams({
-      csrfToken: auth.csrfToken,
-      activity: "GetContentOwnershipData",
-      activityInput: JSON.stringify({
-        contentType: "Ebook",
-        contentCategoryReference: "booksAll",
-        itemStatusList: ["Active"],
-        originTypes: [
-          "Purchase",
-          "Pottermore",
-          "ComicsUnlimited",
-          "KOLL",
-          "Prime",
-          "Comixology",
-        ],
-        fetchCriteria: {
-          sortOrder: "DESCENDING",
-          sortIndex: "DATE",
-          startIndex: 0,
-          batchSize: 999,
-          totalContentCount: -1,
-        },
-        surfaceType: "Desktop",
-      }),
-    }),
-    method: "POST",
-  }).then((res) => res.json())) as GetContentOwnershipDataResponse;
-  return data.GetContentOwnershipData.items;
+  let allItems: ContentItem[] = [];
+  let startIndex = 0;
+  let hasMore = true;
+  const batchSize = 200;
+
+  while (hasMore) {
+    console.log(`Fetching books batch starting at index ${startIndex}`);
+
+    const data = (await fetch(
+      `${options.baseUrl}/hz/mycd/digital-console/ajax`,
+      {
+        headers: getHeaders(auth),
+        body: new URLSearchParams({
+          csrfToken: auth.csrfToken,
+          clientId: "MYCD_WebService",
+          activity: "GetContentOwnershipData",
+          activityInput: JSON.stringify({
+            contentType: "Ebook",
+            contentCategoryReference: "booksAll",
+            itemStatusList: ["Active"],
+            showSharedContent: true,
+            originTypes: [
+              "Purchase",
+              "Pottermore",
+              "ComicsUnlimited",
+              "KOLL",
+              "Prime",
+              "Comixology",
+            ],
+            fetchCriteria: {
+              sortOrder: "DESCENDING",
+              sortIndex: "TITLE",
+              startIndex: startIndex,
+              batchSize: batchSize,
+              totalContentCount: -1,
+            },
+            surfaceType: "LargeDesktop",
+          }),
+        }),
+        method: "POST",
+      }
+    ).then((res) => res.json())) as GetContentOwnershipDataResponse;
+
+    if (!data.GetContentOwnershipData?.items?.length) {
+      hasMore = false;
+      break;
+    }
+
+    allItems = allItems.concat(data.GetContentOwnershipData.items);
+    console.log(`Retrieved ${allItems.length} books so far`);
+
+    // If we got fewer items than the batch size, we've reached the end
+    if (data.GetContentOwnershipData.items.length < batchSize) {
+      hasMore = false;
+    } else {
+      startIndex += batchSize;
+    }
+  }
+
+  console.log(`Finished retrieving all ${allItems.length} books`);
+  return allItems;
 };
 
 /**
@@ -230,10 +261,16 @@ const downloadSingleBook = async (
   device: Device,
   book: ContentItem,
   progressBar: cliProgress.MultiBar,
-  options: Options
+  options: Options,
+  batchInfo: { currentBatch: number; totalBatches: number }
 ) => {
   const safeFileName = sanitize(book.title);
-  const bar = progressBar.create(1, 0, { filename: safeFileName });
+  const barInfo = {
+    filename: safeFileName,
+    currentBatch: batchInfo.currentBatch,
+    totalBatches: batchInfo.totalBatches,
+  };
+  const bar = progressBar.create(1, 0, barInfo);
 
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
@@ -243,12 +280,10 @@ const downloadSingleBook = async (
 
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => {
-      bar.update(progress, { filename: safeFileName });
+      bar.update(progress, barInfo);
     },
     onComplete: () => {
       bar.stop();
-      progressBar.remove(bar);
-      progressBar.log(`Downloaded: ${safeFileName}\n`);
     },
   });
 
@@ -282,32 +317,6 @@ const downloadSingleBook = async (
   }
 };
 
-/** Limits passed in promises to a maximum amount of concurrency */
-async function limitConcurrency(
-  promises: (() => Promise<unknown>)[],
-  limit: number
-): Promise<void> {
-  const executing: Promise<unknown>[] = [];
-
-  for (const promise of promises) {
-    const p = promise();
-    executing.push(p);
-
-    if (executing.length >= limit) {
-      // Wait for the first one to finish
-      await Promise.race(executing);
-      // Remove the completed promise
-      executing.splice(
-        executing.findIndex((p) => p === p),
-        1
-      );
-    }
-  }
-
-  // Wait for the remaining promises to finish
-  await Promise.all(executing);
-}
-
 /**
  * Downloads a list of books and updates a {@link cliProgress.MultiBar}
  */
@@ -321,19 +330,56 @@ const downloadBooks = async (
     {
       hideCursor: true,
       clearOnComplete: false,
-      format: "| {bar} | {filename} | {value}/{total}",
+      format:
+        "| {bar} | {filename} | {value}/{total} | Batch: {currentBatch}/{totalBatches}",
     },
     cliProgress.Presets.shades_grey
   );
-  await limitConcurrency(
-    books
-      .slice(options.startFromOffset, options.totalDownloads)
-      .map(
-        (b) => () => downloadSingleBook(auth, device, b, progressBar, options)
-      ),
-    options.maxConcurrency
+
+  const failedBooks: { book: ContentItem; error: Error }[] = [];
+  const batchSize = options.maxConcurrency;
+  const totalBooks = Math.min(books.length, options.totalDownloads);
+  const totalBatches = Math.ceil(
+    (totalBooks - options.startFromOffset) / batchSize
   );
+
+  for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+    const start = options.startFromOffset + batchIndex * batchSize;
+    const end = Math.min(start + batchSize, totalBooks);
+    const batch = books.slice(start, end);
+
+    console.log(
+      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + 1}-${end})`
+    );
+
+    const downloadWithErrorHandling = async (book: ContentItem) => {
+      try {
+        await downloadSingleBook(auth, device, book, progressBar, options, {
+          currentBatch: batchIndex + 1,
+          totalBatches,
+        });
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(`Failed to download "${book.title}":`, error.message);
+        } else {
+          console.error(`Failed to download "${book.title}":`, error);
+        }
+        failedBooks.push({ book, error: error as Error });
+      }
+    };
+
+    await Promise.all(batch.map((book) => downloadWithErrorHandling(book)));
+  }
+
   progressBar.stop();
+
+  if (failedBooks.length > 0) {
+    console.log("\nThe following books failed to download:");
+    failedBooks.forEach(({ book, error }) => {
+      console.log(`- ${book.title}: ${error.message}`);
+    });
+    console.log(`\nTotal failed downloads: ${failedBooks.length}`);
+  }
 };
 
 /**
