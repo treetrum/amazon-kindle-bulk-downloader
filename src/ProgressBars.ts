@@ -1,19 +1,30 @@
 import logUpdate from "log-update";
 
-const createProgressBarString = (
+export const createProgressBarString = (
   progress: number,
-  barLength: number = 30
+  barLength: number = 30,
+  completedCharacter: string = "█",
+  remainingCharacter: string = "░"
 ): string => {
-  const completedLength = Math.floor(progress * barLength);
-  const remainingLength = barLength - completedLength;
-  return `${"█".repeat(completedLength)}${"░".repeat(remainingLength)}`;
+  // Ensure progress is between 0 and 1
+  const normalizedProgress = Math.max(0, Math.min(1, progress));
+
+  // Calculate lengths with validation
+  const completedLength = Math.max(
+    0,
+    Math.floor(normalizedProgress * barLength)
+  );
+  const remainingLength = Math.max(0, barLength - completedLength);
+
+  // Create the progress bar string with validated lengths
+  return `${completedCharacter.repeat(completedLength)}${remainingCharacter.repeat(remainingLength)}`;
 };
 
 export class ProgressBars {
   items: ProgressBar[] = [];
 
   render() {
-    logUpdate(this.items.map(this.renderProgressBar).join("\n"));
+    logUpdate(this.items.map((b) => b.createString()).join("\n"));
   }
 
   complete() {
@@ -25,28 +36,44 @@ export class ProgressBars {
     this.items.push(item);
     return item;
   }
-
-  renderProgressBar(bar: ProgressBar) {
-    const pct = bar.progress / bar.total;
-    const progressStr = `${bar.progress}/${bar.total}`;
-    return `${createProgressBarString(pct)} | ${bar.content} | ${progressStr}`;
-  }
 }
 
 class ProgressBar {
-  log: ProgressBars;
-  content: string;
-  total: number = 1;
-  progress: number = 0;
+  private log: ProgressBars;
+  private content: string;
+  private _total: number = 1;
+  private _progress: number = 0;
 
   constructor(log: ProgressBars, text: string) {
     this.log = log;
     this.content = text;
   }
 
+  set total(total: number) {
+    this._total = Math.max(1, total);
+  }
+
+  get total() {
+    return this._total;
+  }
+
+  set progress(progress: number) {
+    this._progress = Math.max(0, Math.min(this.total, progress));
+  }
+
+  get progress() {
+    return this._progress;
+  }
+
   update(total: number, progress: number) {
     this.total = total;
     this.progress = progress;
     this.log.render();
+  }
+
+  createString() {
+    const pct = this.progress / this.total;
+    const progressStr = `${this.progress}/${this.total}`;
+    return `${createProgressBarString(pct)} | ${this.content} | ${progressStr}`;
   }
 }

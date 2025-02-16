@@ -9,7 +9,8 @@
     "typecheck": "tsc --project ./tsconfig.json",
     "lint": "eslint src/",
     "prettier": "prettier . --check",
-    "build": "bun build --compile src/index.ts --outfile lib/kindle-downloader"
+    "build": "bun build --compile src/index.ts --outfile lib/kindle-downloader",
+    "test": "bun test"
   },
   "bin": {
     "kindle-downloader": "src/kindle-downloader.ts"
@@ -19,6 +20,7 @@
   "license": "ISC",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "@types/bun": "^1.2.2",
     "@types/lodash": "^4.17.15",
     "@types/node": "^22.13.4",
     "@types/prompts": "^2.4.9",
