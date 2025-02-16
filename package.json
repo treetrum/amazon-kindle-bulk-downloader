@@ -2,16 +2,17 @@
   "name": "amazon-kindle-bulk-downloader",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "build": "tsc -p .",
     "generate-env": "op inject -i .env.template -o .env -f",
-    "start": "ts-node src/index.ts",
-    "watch": "nodemon --watch 'src/**/*.ts' --exec ./node_modules/.bin/ts-node src/index.ts",
+    "start": "bun run src/index.ts",
     "prepare": "husky",
     "typecheck": "tsc --project ./tsconfig.json",
     "lint": "eslint src/",
-    "prettier": "prettier . --check"
+    "prettier": "prettier . --check",
+    "build": "bun build --compile src/index.ts --outfile lib/kindle-downloader"
+  },
+  "bin": {
+    "kindle-downloader": "src/kindle-downloader.ts"
   },
   "keywords": [],
   "author": "",

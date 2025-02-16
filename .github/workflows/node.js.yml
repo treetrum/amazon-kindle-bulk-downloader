@@ -2,9 +2,8 @@ name: Node
 
 on:
   push:
-    branches: ["main"] # whenever a commit is pushed to the main branch (i.e. pr merge)
-  pull_request:
-    branches: ["main"] # whenever a PR is opened targeting main
+    branches:
+      - "**"
 
 jobs:
   build:
@@ -13,14 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-      - run: pnpm install
-      - run: pnpm run prettier
-      - run: pnpm run lint
-      - run: pnpm run build
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run prettier
+      - run: bun run lint
+      - run: bun run build
