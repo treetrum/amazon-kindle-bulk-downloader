@@ -8,10 +8,10 @@ import sanitize from "sanitize-filename";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { getCredentials } from "./credentials";
-import { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
-import { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
-import { ContentItem } from "./types/GetContentOwnershipData";
-import {
+import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
+import type { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
+import type { ContentItem } from "./types/GetContentOwnershipData";
+import type {
   DeviceList as Device,
   GetDevicesOverviewResponse,
 } from "./types/GetDevicesOverviewResponse";
@@ -328,7 +328,6 @@ const downloadBooks = async (
 ) => {
   const progressBar = new cliProgress.MultiBar(
     {
-      hideCursor: true,
       clearOnComplete: false,
       format:
         "| {bar} | {filename} | {value}/{total} | Batch: {currentBatch}/{totalBatches}",
@@ -411,6 +410,7 @@ const main = async (options: Options) => {
 
   const auth = await getAuth(page);
   console.log("Got auth");
+  await browser.close();
 
   const device = await getKindleDevice(auth, options);
   console.log("Got device", device.deviceName, device.deviceSerialNumber);

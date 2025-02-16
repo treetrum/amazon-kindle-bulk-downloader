@@ -4,16 +4,10 @@ Designed for downloading your Kindle eBooks in a more automated fashion than is 
 
 ## Setup
 
-Install dependencies with
+Install dependencies with bun. You can install bun using the instructions found [here](https://bun.sh/docs/installation)
 
 ```bash
-pnpm install
-```
-
-Install the Chrome browser for pupeteer to use
-
-```bash
-npx puppeteer browsers install chrome
+bun install
 ```
 
 ## Running
@@ -38,18 +32,10 @@ The following CLI arguments are made available to customise the downloader to yo
 | `--startFromOffset` | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts.                                             |
 | `--manualAuth`      | false                     | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
 
-### Watch Mode
-
-```bash
-pnpm run watch
-```
-
-This will start the script in 'watch-mode' which is very useful for development. Every save will 'reload' the script and it will begin running immediately again.
-
-### Live Mode
+### Run
 
 You can run this standalone with:
 
 ```bash
-pnpm run start
+bun run start
 ```
