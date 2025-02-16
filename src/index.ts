@@ -1,4 +1,3 @@
-import cliProgress from "cli-progress";
 import dotenv from "dotenv";
 import fs from "fs/promises";
 import path from "path";
@@ -7,6 +6,7 @@ import puppeteer, { Page } from "puppeteer";
 import sanitize from "sanitize-filename";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { ProgressBars } from "./ProgressBars";
 import { getCredentials } from "./credentials";
 import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
 import type { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
@@ -229,7 +229,7 @@ const getDownloadUrl = async (
  */
 const observeResponse = (
   response: Response,
-  fns: { onUpdate: (progress: number) => void; onComplete: () => void }
+  fns: { onUpdate: (progress: number) => void; onComplete?: () => void }
 ) => {
   const total = parseInt(response.headers.get("content-length") ?? "0", 10);
   let loaded = 0;
@@ -246,7 +246,7 @@ const observeResponse = (
           controller.enqueue(value);
         }
         controller.close();
-        fns.onComplete();
+        fns.onComplete?.();
       },
     })
   );
@@ -254,40 +254,25 @@ const observeResponse = (
 };
 
 /**
- * Downloads a single book and updates a passed in {@link cliProgress.MultiBar}
+ * Downloads a single book and updates a passed in {@link ProgressBars}
  */
 const downloadSingleBook = async (
   auth: Auth,
   device: Device,
   book: ContentItem,
-  progressBar: cliProgress.MultiBar,
   options: Options,
-  batchInfo: { currentBatch: number; totalBatches: number }
+  progressBars: ProgressBars
 ) => {
   const safeFileName = sanitize(book.title);
-  const barInfo = {
-    filename: safeFileName,
-    currentBatch: batchInfo.currentBatch,
-    totalBatches: batchInfo.totalBatches,
-  };
-  const bar = progressBar.create(1, 0, barInfo);
-
+  const progressBar = progressBars.create(safeFileName);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
   const rawResponse = await fetch(downloadURL, {
     headers: { Cookie: auth.cookie },
   });
-
   const { response, totalSize } = observeResponse(rawResponse, {
-    onUpdate: (progress) => {
-      bar.update(progress, barInfo);
-    },
-    onComplete: () => {
-      bar.stop();
-    },
+    onUpdate: (progress) => progressBar.update(totalSize, progress),
   });
-
-  bar.start(totalSize, 0);
 
   if (response.ok) {
     const content = rawResponse.headers.get("content-disposition") ?? "";
@@ -326,15 +311,6 @@ const downloadBooks = async (
   books: ContentItem[],
   options: Options
 ) => {
-  const progressBar = new cliProgress.MultiBar(
-    {
-      clearOnComplete: false,
-      format:
-        "| {bar} | {filename} | {value}/{total} | Batch: {currentBatch}/{totalBatches}",
-    },
-    cliProgress.Presets.shades_grey
-  );
-
   const failedBooks: { book: ContentItem; error: Error }[] = [];
   const batchSize = options.maxConcurrency;
   const totalBooks = Math.min(books.length, options.totalDownloads);
@@ -343,6 +319,7 @@ const downloadBooks = async (
   );
 
   for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+    const progressBars = new ProgressBars();
     const start = options.startFromOffset + batchIndex * batchSize;
     const end = Math.min(start + batchSize, totalBooks);
     const batch = books.slice(start, end);
@@ -353,10 +330,7 @@ const downloadBooks = async (
 
     const downloadWithErrorHandling = async (book: ContentItem) => {
       try {
-        await downloadSingleBook(auth, device, book, progressBar, options, {
-          currentBatch: batchIndex + 1,
-          totalBatches,
-        });
+        await downloadSingleBook(auth, device, book, options, progressBars);
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error(`Failed to download "${book.title}":`, error.message);
@@ -368,9 +342,8 @@ const downloadBooks = async (
     };
 
     await Promise.all(batch.map((book) => downloadWithErrorHandling(book)));
+    progressBars.complete();
   }
-
-  progressBar.stop();
 
   if (failedBooks.length > 0) {
     console.log("\nThe following books failed to download:");

@@ -19,7 +19,6 @@
   "license": "ISC",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
-    "@types/cli-progress": "^3.11.6",
     "@types/lodash": "^4.17.15",
     "@types/node": "^22.13.4",
     "@types/prompts": "^2.4.9",
@@ -35,9 +34,9 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "cli-progress": "^3.12.0",
     "dotenv": "^16.4.7",
     "lodash": "^4.17.21",
+    "log-update": "^6.1.0",
     "prompts": "^2.4.2",
     "puppeteer": "^24.2.1",
     "sanitize-filename": "^1.6.3",
