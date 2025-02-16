@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import fs from "fs/promises";
+import logUpdate from "log-update";
 import path from "path";
 import prompts from "prompts";
 import puppeteer, { Page } from "puppeteer";
@@ -123,8 +124,6 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   const batchSize = 200;
 
   while (hasMore) {
-    console.log(`Fetching books batch starting at index ${startIndex}`);
-
     const data = (await fetch(
       `${options.baseUrl}/hz/mycd/digital-console/ajax`,
       {
@@ -166,7 +165,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     }
 
     allItems = allItems.concat(data.GetContentOwnershipData.items);
-    console.log(`Retrieved ${allItems.length} books so far`);
+    logUpdate(`Found ${allItems.length} books so far...`);
 
     // If we got fewer items than the batch size, we've reached the end
     if (data.GetContentOwnershipData.items.length < batchSize) {
@@ -176,7 +175,9 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     }
   }
 
-  console.log(`Finished retrieving all ${allItems.length} books`);
+  logUpdate(`Found ${allItems.length} books in total`);
+  logUpdate.done();
+
   return allItems;
 };
 
@@ -389,7 +390,6 @@ const main = async (options: Options) => {
   console.log("Got device", device.deviceName, device.deviceSerialNumber);
 
   const books = await getAllContentItems(auth, options);
-  console.log("Got books", books.length);
 
   await downloadBooks(auth, device, books, options);
 
