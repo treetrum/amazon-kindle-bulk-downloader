@@ -271,6 +271,9 @@ const downloadSingleBook = async (
   const rawResponse = await fetch(downloadURL, {
     headers: { Cookie: auth.cookie },
   });
+  if (!rawResponse.ok) {
+    throw new Error(`${rawResponse.status}: ${rawResponse.statusText}`);
+  }
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => progressBar.update(totalSize, progress),
   });
