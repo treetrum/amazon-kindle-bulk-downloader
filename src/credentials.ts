@@ -6,7 +6,7 @@ export const getCredentials = async () => {
   const password = process.env["PASSWORD"];
   const otp = process.env["OTP"];
 
-  if (!user || !password || !otp) {
+  if (!user || !password) {
     throw new Error("Failed to get login credentials from env");
   }
 
