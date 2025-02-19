@@ -91,9 +91,9 @@ const getHeaders = ({ cookie }: Auth) => {
 };
 
 /**
- * Gets the first 'KINDLE' device associated with the authed account
+ * Gets the first 'KINDLE' or 'FIRE_TABLET' device associated with the authed account
  */
-const getKindleDevice = async (auth: Auth, options: Options) => {
+const getSupportedDevice = async (auth: Auth, options: Options) => {
   const data = (await fetch(`${options.baseUrl}/hz/mycd/digital-console/ajax`, {
     headers: getHeaders(auth),
     body: new URLSearchParams({
@@ -105,19 +105,21 @@ const getKindleDevice = async (auth: Auth, options: Options) => {
     }),
     method: "POST",
   }).then((res) => res.json())) as GetDevicesOverviewResponse;
+
   if (data.success !== true) {
     throw new Error(`getDevice failed: ${data.error}`);
   }
-  const kindleDevices = data.GetDevicesOverview.deviceList.filter(
-    (d) => d.deviceFamily === "KINDLE"
+
+  const supportedDevices = data.GetDevicesOverview.deviceList.filter(
+    (d) => d.deviceFamily === "KINDLE" || d.deviceFamily === "FIRE_TABLET"
   );
 
-  if (kindleDevices.length === 0) {
-    throw new Error("Did not find a KINDLE device");
+  if (supportedDevices.length === 0) {
+    throw new Error("Did not find a KINDLE or FIRE_TABLET device");
   }
 
-  if (kindleDevices.length === 1) {
-    return kindleDevices[0];
+  if (supportedDevices.length === 1) {
+    return supportedDevices[0];
   }
 
   // If the user has more than one device, prompt them to select one
@@ -125,7 +127,7 @@ const getKindleDevice = async (auth: Auth, options: Options) => {
     type: "select",
     name: "device",
     message: "Select a Kindle device (note, eink devices are preferred)",
-    choices: kindleDevices.map((d) => ({
+    choices: supportedDevices.map((d) => ({
       title: d.deviceName,
       value: d,
     })),
@@ -408,7 +410,7 @@ const main = async (options: Options) => {
   console.log("Got auth");
   await browser.close();
 
-  const device = await getKindleDevice(auth, options);
+  const device = await getSupportedDevice(auth, options);
   console.log("Got device", device.deviceName, device.deviceSerialNumber);
 
   const books = await getAllContentItems(auth, options);
