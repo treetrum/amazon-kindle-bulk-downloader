@@ -1,4 +1,4 @@
-pnpm run prettier
-pnpm run lint
-pnpm run test
-pnpm run build
+bun run prettier
+bun run lint
+bun run test
+bun run build
