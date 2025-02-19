@@ -105,13 +105,29 @@ const getKindleDevice = async (auth: Auth, options: Options) => {
   if (data.success !== true) {
     throw new Error(`getDevice failed: ${data.error}`);
   }
-  const kindleDevice = data.GetDevicesOverview.deviceList.find(
+  const kindleDevices = data.GetDevicesOverview.deviceList.filter(
     (d) => d.deviceFamily === "KINDLE"
   );
-  if (!kindleDevice) {
+
+  if (kindleDevices.length === 0) {
     throw new Error("Did not find a KINDLE device");
   }
-  return kindleDevice;
+
+  if (kindleDevices.length === 1) {
+    return kindleDevices[0];
+  }
+
+  // If the user has more than one device, prompt them to select one
+  const response = await prompts({
+    type: "select",
+    name: "device",
+    message: "Select a Kindle device (note, eink devices are preferred)",
+    choices: kindleDevices.map((d) => ({
+      title: d.deviceName,
+      value: d,
+    })),
+  });
+  return response.device;
 };
 
 /**
