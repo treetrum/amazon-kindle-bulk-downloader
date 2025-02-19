@@ -36,7 +36,7 @@ The following CLI arguments are made available to customise the downloader to yo
 
 | Argument            | Default Value             | Description                                                                                                                      |
 | ------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--baseUrl`         | https://www.amazon.com.au | Which Amazon base URL to use                                                                                                     |
+| `--baseUrl`         | https://www.amazon.com.au | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                             |
 | `--totalDownloads`  | 9999                      | Total number of downloads to do                                                                                                  |
 | `--maxConcurrency`  | 10                        | Maximum number of concurrent downloads                                                                                           |
 | `--startFromOffset` | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts.                                             |
