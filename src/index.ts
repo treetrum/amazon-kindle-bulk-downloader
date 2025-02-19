@@ -43,6 +43,9 @@ const login = async (page: Page) => {
 
   const otpInput = await page.$("#auth-mfa-otpcode");
   if (otpInput) {
+    if (!otp) {
+      throw new Error("OTP is required for this account but was not provided");
+    }
     console.log("Filling OTP");
     await otpInput.type(otp);
     await page.click("#auth-mfa-remember-device");
