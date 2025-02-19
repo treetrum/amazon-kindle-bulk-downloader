@@ -4,11 +4,16 @@ Designed for downloading your Kindle eBooks in a more automated fashion than is 
 
 ## Pre-Requisites
 
-The most important pre-request is that you have a physical e-ink Kindle linked to your Amazon account. This is a requirement from Amazon's side and this tool does not offer a way to bypass this.
+The most important pre-requisite is that you have a physical e-ink Kindle or an Amazon Fire Tablet linked to your Amazon account. This is a requirement from Amazon's side and this tool does not offer a way to bypass this.
 
 An important distinction is that the physical Kindle you have linked cannot be one of the latest 2024 models. For whatever reason, Amazon has decided to block the ability to download books from these devices. This tool will not work with these devices.
 
-The easiest way to check if this tool will work for you is to log into your Amazon account manually and navigate to `Manage Your Content and Devices`. From there when clicking on `More Actions > Download & Transfer via USB` on a book, you should see your Kindle device listed. If you see the message `You do not have any compatible devices registered for this content` then it means you either don't have a Kindle device linked or you have a Kindle device that is not compatible with this tool. If you are able to proceed to the next screen and download the book, then this tool should work for you.
+The easiest way to check if this tool will work for you is to log into your Amazon account manually and navigate to `Manage Your Content and Devices`. From there when clicking on `More Actions > Download & Transfer via USB` on a book, you should see your Kindle or Fire Tablet device listed. If you see the message `You do not have any compatible devices registered for this content` then it means you:
+
+1. either don't have a Kindle or Fire Tablet device linked to your account, OR
+2. have a Kindle or Fire Tablet device that is not compatible with this tool
+
+If you are able to proceed to the next screen and download the book, then this tool should work for you.
 
 ## Setup
 
