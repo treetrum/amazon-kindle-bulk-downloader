@@ -60,3 +60,6 @@ Command line arguments can be provided as follows
 ```bash
 bun run start --baseUrl "https://www.amazon.com.au"
 ```
+
+## Troubleshooting
+* `Found 0 books in total`: If you have Kindle devices that meet the [Pre-Requisite requirements]([url](https://github.com/treetrum/amazon-kindle-bulk-downloader/edit/main/README.md#pre-requisites)) and still receive this error, you _may_ be authenticated in the wrong Amazon account for your local. Verify you are using the _correct_ `baseUrl` for your Amazon account: `bun run start --baseUrl "https://www.amazon.com.au"` represents Australian based accounts, whereas `bun run start --baseUrl "https://www.amazon.com"` is correct for a USA based account, etc.
