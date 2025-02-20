@@ -442,7 +442,7 @@ type Options = {
     })
     .option("maxConcurrency", {
       type: "number",
-      default: 25,
+      default: 10,
       description: "Maximum number of concurrent downloads",
     })
     .option("startFromOffset", {
