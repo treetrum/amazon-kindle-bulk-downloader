@@ -60,3 +60,19 @@ Command line arguments can be provided as follows
 ```bash
 bun run start --baseUrl "https://www.amazon.com.au"
 ```
+
+### Run in docker
+
+build docker image
+
+```bash
+docker build . -t amazon-kindle-bulk-downloader
+```
+
+run container
+
+```bash
+docker run --rm -ti -v ./downloads:/app/downloads -e AMAZON_USER=userName -e PASSWORD=pass -e OTP=otpCode amazon-kindle-bulk-downloader --baseUrl "https://www.amazon.com"
+```
+
+if you are on arm64 (ex Mac with apple silicone) you mast add `--platform linux/x86_64` to thous commands
