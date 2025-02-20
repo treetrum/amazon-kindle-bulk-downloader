@@ -386,7 +386,7 @@ const main = async (options: Options) => {
   dotenv.config();
 
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     // userDataDir: "./user_data",
   });
   const page = await browser.newPage();
