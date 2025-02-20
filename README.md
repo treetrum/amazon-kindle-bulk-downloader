@@ -39,13 +39,13 @@ I recommend using the env template found in the root of the repo to create and .
 
 The following CLI arguments are made available to customise the downloader to your needs
 
-| Argument            | Default Value             | Description                                                                                                                      |
-| ------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--baseUrl`         | https://www.amazon.com.au | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                             |
-| `--totalDownloads`  | 9999                      | Total number of downloads to do                                                                                                  |
-| `--maxConcurrency`  | 10                        | Maximum number of concurrent downloads                                                                                           |
-| `--startFromOffset` | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts.                                             |
-| `--manualAuth`      | false                     | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
+| Argument            | Default Value             | Description                                                                                                                                                                                                                                                      |
+| ------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--baseUrl`         | https://www.amazon.com.au | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                                                                                                                                                             |
+| `--totalDownloads`  | 9999                      | Total number of downloads to do                                                                                                                                                                                                                                  |
+| `--maxConcurrency`  | 10                        | Maximum number of concurrent downloads                                                                                                                                                                                                                           |
+| `--startFromOffset` | 0                         | Index offset to begin downloading from. Allows resuming of previous failed attempts. Note this argument has [known issues](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/162#issuecomment-2669569874) and should probably be avoided for now. |
+| `--manualAuth`      | false                     | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working.                                                                                                                                 |
 
 ### Running
 
@@ -62,4 +62,27 @@ bun run start --baseUrl "https://www.amazon.com.au"
 ```
 
 ## Troubleshooting
-* `Found 0 books in total`: If you have Kindle devices that meet the [Pre-Requisite requirements]([url](https://github.com/treetrum/amazon-kindle-bulk-downloader/edit/main/README.md#pre-requisites)) and still receive this error, you _may_ be authenticated in the wrong Amazon account for your local. Verify you are using the _correct_ `baseUrl` for your Amazon account: `bun run start --baseUrl "https://www.amazon.com.au"` represents Australian based accounts, whereas `bun run start --baseUrl "https://www.amazon.com"` is correct for a USA based account, etc.
+
+If you're having any issues with the tool, please first ensure that you have the latest version of the code by running `git pull` or redownloading the repository and then running `bun install` from the root of the repository.
+
+In addition, please ensure that you have followed the [pre-requisites](https://github.com/treetrum/amazon-kindle-bulk-downloader?tab=readme-ov-file#pre-requisites) section carefully and can download a book manually through the website.
+
+### Common Errors
+
+#### Error: Found 0 books in total
+
+This error _may_ indicate that you are authenticated to the wrong Amazon account for your locale.
+
+You need to ensure that you provide the base URL for the Amazon region where your purchases were made. For example, if you are in Australia, you should use `https://www.amazon.com.au`, if you are in the USA, you should use `https://www.amazon.com`, etc.
+
+This base URL should be provided as a CLI argument when running the tool. For example:
+
+```bash
+# For USA based accounts
+bun run start --baseUrl "https://www.amazon.com"
+
+# For Australia based accounts
+bun run start --baseUrl "https://www.amazon.com.au"
+
+# ... etc.
+```
