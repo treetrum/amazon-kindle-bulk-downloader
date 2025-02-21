@@ -275,6 +275,63 @@ const observeResponse = (
   return { response: outputRes, totalSize: total };
 };
 
+const shouldDownloadFile = async (
+  downloadPath: string,
+  fileTitle: string,
+  url: string,
+  cookie: string
+): Promise<boolean> => {
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      headers: { Cookie: cookie },
+    });
+
+    if (!response.ok) {
+      console.error(
+        `HEAD request failed for ${url}: ${response.status} ${response.statusText}`
+      );
+      throw new Error("HEAD request failed");
+    }
+
+    const content = response.headers.get("content-disposition") ?? "";
+    const extension =
+      content
+        .split(";")
+        .map((i) => {
+          const [key, value] = i.trim().split("=");
+          return { key, value };
+        })
+        .find((i) => i.key === "filename")
+        ?.value.split(".")[1] ?? "azw3";
+
+    const filename = `${fileTitle}.${extension}`;
+    const theFile = path.join(downloadPath, filename);
+
+    const contentLengthHeader = response.headers.get("content-length");
+    if (contentLengthHeader === null) {
+      throw new Error(`Content-Length header not found for ${url}`);
+    }
+
+    const contentLength = parseInt(contentLengthHeader, 10);
+    if (isNaN(contentLength)) {
+      throw new Error(
+        `Invalid Content-Length header for ${url}: ${contentLengthHeader}`
+      );
+    }
+
+    try {
+      const stats = await fs.stat(theFile);
+      return stats.size < contentLength; // Returns true if file exists and is smaller
+    } catch (error) {
+      return true; // Returns true if file does not exist or other error
+    }
+  } catch (error) {
+    console.error(`Preflight Error for ${url}:`, error);
+    return false;
+  }
+};
+
 /**
  * Downloads a single book and updates a passed in {@link ProgressBars}
  */
@@ -289,41 +346,53 @@ const downloadSingleBook = async (
   const progressBar = progressBars.create(safeFileName);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
-  const rawResponse = await fetch(downloadURL, {
-    headers: { Cookie: auth.cookie },
-  });
-  if (!rawResponse.ok) {
-    throw new Error(`${rawResponse.status}: ${rawResponse.statusText}`);
-  }
-  const { response, totalSize } = observeResponse(rawResponse, {
-    onUpdate: (progress) => progressBar.update(totalSize, progress),
-  });
+  const downloadsDir = path.join(__dirname, "../downloads");
+  fs.mkdir(downloadsDir, { recursive: true });
 
-  if (response.ok) {
-    const content = rawResponse.headers.get("content-disposition") ?? "";
-    const extension =
-      content
-        .split(";")
-        .map((i) => {
-          const [key, value] = i.trim().split("=");
-          return { key, value };
-        })
-        .find((i) => i.key === "filename")
-        ?.value.split(".")[1] ?? "azw3";
+  const dl = await shouldDownloadFile(
+    downloadsDir,
+    safeFileName,
+    downloadURL,
+    auth.cookie
+  );
 
-    const filename = `${safeFileName}.${extension}`;
-    const data = await response.arrayBuffer();
+  if (dl) {
+    const rawResponse = await fetch(downloadURL, {
+      headers: { Cookie: auth.cookie },
+    });
+    if (!rawResponse.ok) {
+      throw new Error(`${rawResponse.status}: ${rawResponse.statusText}`);
+    }
 
-    const downloadsDir = path.join(__dirname, "../downloads");
-    fs.mkdir(downloadsDir, { recursive: true });
-    await fs.writeFile(path.join(downloadsDir, filename), Buffer.from(data));
+    const { response, totalSize } = observeResponse(rawResponse, {
+      onUpdate: (progress) => progressBar.update(totalSize, progress),
+    });
+
+    if (response.ok) {
+      const content = rawResponse.headers.get("content-disposition") ?? "";
+      const extension =
+        content
+          .split(";")
+          .map((i) => {
+            const [key, value] = i.trim().split("=");
+            return { key, value };
+          })
+          .find((i) => i.key === "filename")
+          ?.value.split(".")[1] ?? "azw3";
+
+      const filename = `${safeFileName}.${extension}`;
+      const data = await response.arrayBuffer();
+      await fs.writeFile(path.join(downloadsDir, filename), Buffer.from(data));
+    } else {
+      console.error(
+        "Request failed with status",
+        response.status,
+        response.statusText
+      );
+      throw new Error("Download failed");
+    }
   } else {
-    console.error(
-      "Request failed with status",
-      response.status,
-      response.statusText
-    );
-    throw new Error("Download failed");
+    progressBar.update(1, 1);
   }
 };
 

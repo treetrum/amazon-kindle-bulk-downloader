@@ -31,7 +31,7 @@
     "husky": "^9.1.7",
     "nodemon": "^3.1.9",
     "pnpm": "^10.4.0",
-    "prettier": "^3.5.1",
+    "prettier": "3.5.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
