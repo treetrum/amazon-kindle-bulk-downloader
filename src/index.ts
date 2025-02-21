@@ -203,7 +203,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     logUpdate(`Found ${allItems.length} books so far...`);
 
     if (
-      !data.GetContentOwnershipData.hasMoreItems ||
+      data.GetContentOwnershipData.items.length < batchSize ||
       allItems.length >= options.totalDownloads
     ) {
       hasMore = false;
