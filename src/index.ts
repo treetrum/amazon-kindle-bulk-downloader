@@ -154,7 +154,7 @@ const getSupportedDevice = async (auth: Auth, options: Options) => {
  */
 const getAllContentItems = async (auth: Auth, options: Options) => {
   let allItems: ContentItem[] = [];
-  let startIndex = 0;
+  let startIndex = options.startFromOffset;
   let hasMore = true;
   const batchSize = 200;
 
@@ -202,8 +202,10 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     allItems = allItems.concat(data.GetContentOwnershipData.items);
     logUpdate(`Found ${allItems.length} books so far...`);
 
-    // If we got fewer items than the batch size, we've reached the end
-    if (data.GetContentOwnershipData.items.length < batchSize) {
+    if (
+      !data.GetContentOwnershipData.hasMoreItems ||
+      allItems.length >= options.totalDownloads
+    ) {
       hasMore = false;
     } else {
       startIndex += batchSize;
@@ -213,7 +215,13 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   logUpdate(`Found ${allItems.length} books in total`);
   logUpdate.done();
 
-  return allItems;
+  if (allItems.length > options.totalDownloads) {
+    console.warn(
+      `Found more books than "totalDownloads" option, only downloading the first ${options.totalDownloads}`
+    );
+  }
+
+  return allItems.slice(0, options.totalDownloads);
 };
 
 /**
@@ -376,19 +384,18 @@ const downloadBooks = async (
 ) => {
   const failedBooks: { book: ContentItem; error: Error }[] = [];
   const batchSize = options.maxConcurrency;
-  const totalBooks = Math.min(books.length, options.totalDownloads);
-  const totalBatches = Math.ceil(
-    (totalBooks - options.startFromOffset) / batchSize
-  );
+  const totalBooks = books.length;
+  const totalBatches = Math.ceil(totalBooks / batchSize);
 
   for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
     const progressBars = new ProgressBars();
-    const start = options.startFromOffset + batchIndex * batchSize;
+    const start = batchIndex * batchSize;
     const end = Math.min(start + batchSize, totalBooks);
     const batch = books.slice(start, end);
 
+    const offset = options.startFromOffset;
     console.log(
-      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + 1}-${end})`
+      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + offset + 1}-${end + offset})`
     );
 
     const downloadWithErrorHandling = async (book: ContentItem) => {
@@ -507,7 +514,7 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     })
     .option("totalDownloads", {
       type: "number",
-      default: 9999,
+      default: Number.MAX_SAFE_INTEGER,
       description: "Total number of downloads to do",
     })
     .option("maxConcurrency", {
