@@ -41,13 +41,14 @@ I recommend using the env template found in the root of the repo to create and .
 
 The following CLI arguments are made available to customise the downloader to your needs
 
-| Argument            | Default Value                          | Description                                                                                                                      |
-| ------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--baseUrl`         | N/A (Will be prompted if not provided) | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                             |
-| `--totalDownloads`  | 9999                                   | Total number of downloads to do                                                                                                  |
-| `--maxConcurrency`  | 10                                     | Maximum number of concurrent downloads                                                                                           |
-| `--startFromOffset` | 0                                      | Index offset to begin downloading from. Allows resuming of previous partially finished attempts.                                 |
-| `--manualAuth`      | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
+| Argument              | Default Value                          | Description                                                                                                                      |
+| --------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--baseUrl`           | N/A (Will be prompted if not provided) | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                             |
+| `--totalDownloads`    | Infinity                               | Total number of downloads to do                                                                                                  |
+| `--maxConcurrency`    | 10                                     | Maximum number of concurrent downloads                                                                                           |
+| `--startFromOffset`   | 0                                      | Index offset to begin downloading from. Allows resuming of previous partially finished attempts.                                 |
+| `--manualAuth`        | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
+| `--duplicateHandling` | skip                                   | How to handle files of the same name/size on the filesystem. Options: skip, overwrite                                            |
 
 ### Running
 
