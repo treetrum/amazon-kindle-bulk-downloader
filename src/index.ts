@@ -52,6 +52,16 @@ const login = async (page: Page) => {
     await page.click("#auth-signin-button");
     await page.waitForNavigation();
   }
+
+  const captchaInput = await page.$("input[name='cvf_captcha_input']");
+  if (captchaInput) {
+    console.log("CAPTCHA found");
+    await prompts({
+      name: "captcha",
+      type: "confirm",
+      message: "Press enter once you've solved the CAPTCHA",
+    });
+  }
 };
 
 /**
