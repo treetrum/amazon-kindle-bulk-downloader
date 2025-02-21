@@ -322,7 +322,7 @@ const shouldDownloadFile = async (
 
     try {
       const stats = await fs.stat(theFile);
-      return stats.size < contentLength; // Returns true if file exists and is smaller
+      return stats.size != contentLength; // Returns true if file exists and is different
     } catch (error) {
       return true; // Returns true if file does not exist or other error
     }
