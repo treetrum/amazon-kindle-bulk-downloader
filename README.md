@@ -91,6 +91,8 @@ bun run start --baseUrl "https://www.amazon.com.au"
 
 From my testing, 404 errors on book downloads largely occur when the tool is attempting to download an item that is simply not downloadable. From what I can tell, this includes certain comic book purchases. Users with comic book libraries and knowledge of javascript are encouraged to contribute to the project to help test and fix this issue.
 
+There has also [been an indication](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/162#issue-2864124279) that 404s can ocurr when a book is present on too many devices. If that's the case, you can try deleting the book of some of your devices and try the tool again.
+
 #### Error: Failed to parse CRSF token
 
 This indicates that your login did not fully succeed. There are a multitude of reasons why this could happen however the simplest fix is often to login using the --manualAuth CLI flag instead of using the automated process.
