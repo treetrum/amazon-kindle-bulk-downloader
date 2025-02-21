@@ -9,6 +9,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { ProgressBars } from "./ProgressBars";
 import { getCredentials } from "./credentials";
+import { fetchJson, throwingFetch } from "./networking";
 import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
 import type { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
 import type { ContentItem } from "./types/GetContentOwnershipData";
@@ -104,17 +105,20 @@ const getHeaders = ({ cookie }: Auth) => {
  * Gets the first 'KINDLE' or 'FIRE_TABLET' device associated with the authed account
  */
 const getSupportedDevice = async (auth: Auth, options: Options) => {
-  const data = (await fetch(`${options.baseUrl}/hz/mycd/digital-console/ajax`, {
-    headers: getHeaders(auth),
-    body: new URLSearchParams({
-      csrfToken: auth.csrfToken,
-      activity: "GetDevicesOverview",
-      activityInput: JSON.stringify({
-        surfaceType: "LargeDesktop",
+  const data = await fetchJson<GetDevicesOverviewResponse>(
+    `${options.baseUrl}/hz/mycd/digital-console/ajax`,
+    {
+      headers: getHeaders(auth),
+      body: new URLSearchParams({
+        csrfToken: auth.csrfToken,
+        activity: "GetDevicesOverview",
+        activityInput: JSON.stringify({
+          surfaceType: "LargeDesktop",
+        }),
       }),
-    }),
-    method: "POST",
-  }).then((res) => res.json())) as GetDevicesOverviewResponse;
+      method: "POST",
+    }
+  );
 
   if (data.success !== true) {
     throw new Error(`getDevice failed: ${data.error}`);
@@ -155,7 +159,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   const batchSize = 200;
 
   while (hasMore) {
-    const data = (await fetch(
+    const data = await fetchJson<GetContentOwnershipDataResponse>(
       `${options.baseUrl}/hz/mycd/digital-console/ajax`,
       {
         headers: getHeaders(auth),
@@ -188,7 +192,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
         }),
         method: "POST",
       }
-    ).then((res) => res.json())) as GetContentOwnershipDataResponse;
+    );
 
     if (!data.GetContentOwnershipData?.items?.length) {
       hasMore = false;
@@ -221,22 +225,25 @@ const getDownloadUrl = async (
   asin: ContentItem,
   options: Options
 ) => {
-  const data = (await fetch(`${options.baseUrl}/hz/mycd/ajax`, {
-    headers: getHeaders(auth),
-    body: new URLSearchParams({
-      csrfToken: auth.csrfToken,
-      data: JSON.stringify({
-        param: {
-          DownloadViaUSB: {
-            contentName: asin.asin,
-            encryptedDeviceAccountId: device.deviceAccountID,
-            originType: "Purchase",
+  const data = await fetchJson<DownloadViaUSBResponse>(
+    `${options.baseUrl}/hz/mycd/ajax`,
+    {
+      headers: getHeaders(auth),
+      body: new URLSearchParams({
+        csrfToken: auth.csrfToken,
+        data: JSON.stringify({
+          param: {
+            DownloadViaUSB: {
+              contentName: asin.asin,
+              encryptedDeviceAccountId: device.deviceAccountID,
+              originType: "Purchase",
+            },
           },
-        },
+        }),
       }),
-    }),
-    method: "POST",
-  }).then((res) => res.json())) as DownloadViaUSBResponse;
+      method: "POST",
+    }
+  );
 
   if (data.DownloadViaUSB.success !== true) {
     throw new Error("Failed to fetch download URL");
@@ -299,12 +306,13 @@ const downloadSingleBook = async (
   const progressBar = progressBars.create(safeFileName);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
-  const rawResponse = await fetch(downloadURL, {
+  if (downloadURL.includes("/error")) {
+    throw new Error("No valid download URL found");
+  }
+
+  const rawResponse = await throwingFetch(downloadURL, {
     headers: { Cookie: auth.cookie },
   });
-  if (!rawResponse.ok) {
-    throw new Error(`${rawResponse.status}: ${rawResponse.statusText}`);
-  }
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => progressBar.update(totalSize, progress),
   });
