@@ -440,7 +440,7 @@ const main = async (options: Options) => {
   await browser.close();
 
   console.log(
-    "\nDownloading complete. You can find your books in the 'downloads' folder"
+    "\nDownloading complete. You can find your books in the 'downloads' folder."
   );
 };
 
@@ -510,15 +510,6 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     .parse();
 
   const baseUrl = await sanitizeBaseURL(args.baseUrl);
-  args.baseUrl ??
-    (
-      await prompts({
-        type: "text",
-        name: "baseUrl",
-        message: "Enter the Amazon base URL",
-        instructions: "e.g. https://www.amazon.com",
-      })
-    ).baseUrl;
 
   main({ ...args, baseUrl });
 })();
