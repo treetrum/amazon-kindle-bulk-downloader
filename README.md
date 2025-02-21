@@ -86,3 +86,11 @@ bun run start --baseUrl "https://www.amazon.com.au"
 
 # ... etc.
 ```
+
+#### Error: 404 errors when downloading books
+
+From my testing, 404 errors on book downloads largely occur when the tool is attempting to download an item that is simply not downloadable. From what I can tell, this includes certain comic book purchases. Users with comic book libraries and knowledge of javascript are encouraged to contribute to the project to help test and fix this issue.
+
+#### Error: Failed to parse CRSF token
+
+This indicates that your login did not fully succeed. There are a multitude of reasons why this could happen however the simplest fix is often to login using the --manualAuth CLI flag instead of using the automated process.
