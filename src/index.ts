@@ -303,38 +303,58 @@ const downloadSingleBook = async (
   progressBars: ProgressBars
 ) => {
   const safeFileName = sanitize(book.title);
-  const progressBar = progressBars.create(safeFileName);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
   if (downloadURL.includes("/error")) {
     throw new Error("No valid download URL found");
   }
 
+  const abortController = new AbortController();
   const rawResponse = await throwingFetch(downloadURL, {
     headers: { Cookie: auth.cookie },
+    signal: abortController.signal,
   });
+  const size = parseInt(rawResponse.headers.get("content-length") ?? "0", 10);
+  const content = rawResponse.headers.get("content-disposition") ?? "";
+  const extension =
+    content
+      .split(";")
+      .map((i) => {
+        const [key, value] = i.trim().split("=");
+        return { key, value };
+      })
+      .find((i) => i.key === "filename")
+      ?.value.split(".")[1] ?? "azw3";
+
+  // check if the book is already present on the filesystem (with the correct size)
+  const downloadsDir = path.join(__dirname, "../downloads");
+  const filename = `${safeFileName}.${extension}`;
+  const downloadPath = path.join(downloadsDir, filename);
+  const filePath = path.join(downloadsDir, filename);
+
+  // Only download if the file isn't already on the filesystem
+  try {
+    const stats = await fs.stat(filePath);
+    if (stats.size === size) {
+      const progressBar = progressBars.create(
+        `Already downloaded — skipping: ${safeFileName}`
+      );
+      progressBar.update(size, size);
+      abortController.abort();
+      return;
+    }
+  } catch (error) {
+    // File does not exist
+  }
+
+  const progressBar = progressBars.create(safeFileName);
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => progressBar.update(totalSize, progress),
   });
-
   if (response.ok) {
-    const content = rawResponse.headers.get("content-disposition") ?? "";
-    const extension =
-      content
-        .split(";")
-        .map((i) => {
-          const [key, value] = i.trim().split("=");
-          return { key, value };
-        })
-        .find((i) => i.key === "filename")
-        ?.value.split(".")[1] ?? "azw3";
-
-    const filename = `${safeFileName}.${extension}`;
     const data = await response.arrayBuffer();
-
-    const downloadsDir = path.join(__dirname, "../downloads");
     fs.mkdir(downloadsDir, { recursive: true });
-    await fs.writeFile(path.join(downloadsDir, filename), Buffer.from(data));
+    await fs.writeFile(downloadPath, Buffer.from(data));
   } else {
     console.error(
       "Request failed with status",
