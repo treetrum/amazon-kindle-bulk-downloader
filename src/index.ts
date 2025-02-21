@@ -9,6 +9,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { ProgressBars } from "./ProgressBars";
 import { getCredentials } from "./credentials";
+import { fetchJson } from "./networking";
 import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
 import type { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
 import type { ContentItem } from "./types/GetContentOwnershipData";
@@ -52,6 +53,16 @@ const login = async (page: Page) => {
     await page.click("#auth-signin-button");
     await page.waitForNavigation();
   }
+
+  const captchaInput = await page.$("input[name='cvf_captcha_input']");
+  if (captchaInput) {
+    console.log("CAPTCHA found");
+    await prompts({
+      name: "captcha",
+      type: "confirm",
+      message: "Press enter once you've solved the CAPTCHA",
+    });
+  }
 };
 
 /**
@@ -94,17 +105,20 @@ const getHeaders = ({ cookie }: Auth) => {
  * Gets the first 'KINDLE' or 'FIRE_TABLET' device associated with the authed account
  */
 const getSupportedDevice = async (auth: Auth, options: Options) => {
-  const data = (await fetch(`${options.baseUrl}/hz/mycd/digital-console/ajax`, {
-    headers: getHeaders(auth),
-    body: new URLSearchParams({
-      csrfToken: auth.csrfToken,
-      activity: "GetDevicesOverview",
-      activityInput: JSON.stringify({
-        surfaceType: "LargeDesktop",
+  const data = await fetchJson<GetDevicesOverviewResponse>(
+    `${options.baseUrl}/hz/mycd/digital-console/ajax`,
+    {
+      headers: getHeaders(auth),
+      body: new URLSearchParams({
+        csrfToken: auth.csrfToken,
+        activity: "GetDevicesOverview",
+        activityInput: JSON.stringify({
+          surfaceType: "LargeDesktop",
+        }),
       }),
-    }),
-    method: "POST",
-  }).then((res) => res.json())) as GetDevicesOverviewResponse;
+      method: "POST",
+    }
+  );
 
   if (data.success !== true) {
     throw new Error(`getDevice failed: ${data.error}`);
@@ -145,7 +159,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   const batchSize = 200;
 
   while (hasMore) {
-    const data = (await fetch(
+    const data = await fetchJson<GetContentOwnershipDataResponse>(
       `${options.baseUrl}/hz/mycd/digital-console/ajax`,
       {
         headers: getHeaders(auth),
@@ -178,7 +192,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
         }),
         method: "POST",
       }
-    ).then((res) => res.json())) as GetContentOwnershipDataResponse;
+    );
 
     if (!data.GetContentOwnershipData?.items?.length) {
       hasMore = false;
@@ -211,22 +225,25 @@ const getDownloadUrl = async (
   asin: ContentItem,
   options: Options
 ) => {
-  const data = (await fetch(`${options.baseUrl}/hz/mycd/ajax`, {
-    headers: getHeaders(auth),
-    body: new URLSearchParams({
-      csrfToken: auth.csrfToken,
-      data: JSON.stringify({
-        param: {
-          DownloadViaUSB: {
-            contentName: asin.asin,
-            encryptedDeviceAccountId: device.deviceAccountID,
-            originType: "Purchase",
+  const data = await fetchJson<DownloadViaUSBResponse>(
+    `${options.baseUrl}/hz/mycd/ajax`,
+    {
+      headers: getHeaders(auth),
+      body: new URLSearchParams({
+        csrfToken: auth.csrfToken,
+        data: JSON.stringify({
+          param: {
+            DownloadViaUSB: {
+              contentName: asin.asin,
+              encryptedDeviceAccountId: device.deviceAccountID,
+              originType: "Purchase",
+            },
           },
-        },
+        }),
       }),
-    }),
-    method: "POST",
-  }).then((res) => res.json())) as DownloadViaUSBResponse;
+      method: "POST",
+    }
+  );
 
   if (data.DownloadViaUSB.success !== true) {
     throw new Error("Failed to fetch download URL");
@@ -345,9 +362,7 @@ const downloadSingleBook = async (
   const safeFileName = sanitize(book.title);
   const progressBar = progressBars.create(safeFileName);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
-
-  const downloadsDir = path.join(__dirname, "../downloads");
-  fs.mkdir(downloadsDir, { recursive: true });
+  const downloadsDir = path.join(__dirname, "downloads");
 
   const dl = await shouldDownloadFile(
     downloadsDir,
@@ -363,7 +378,6 @@ const downloadSingleBook = async (
     if (!rawResponse.ok) {
       throw new Error(`${rawResponse.status}: ${rawResponse.statusText}`);
     }
-
     const { response, totalSize } = observeResponse(rawResponse, {
       onUpdate: (progress) => progressBar.update(totalSize, progress),
     });
@@ -426,10 +440,16 @@ const downloadBooks = async (
       try {
         await downloadSingleBook(auth, device, book, options, progressBars);
       } catch (error: unknown) {
+        const titleForError = sanitize(
+          book.title.length > 50 ? book.title.slice(0, 50) + "..." : book.title
+        );
         if (error instanceof Error) {
-          console.error(`Failed to download "${book.title}":`, error.message);
+          console.error(
+            `Failed to download "${titleForError}":`,
+            error.message
+          );
         } else {
-          console.error(`Failed to download "${book.title}":`, error);
+          console.error(`Failed to download "${titleForError}":`, error);
         }
         failedBooks.push({ book, error: error as Error });
       }
@@ -440,10 +460,6 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-    console.log("\nThe following books failed to download:");
-    failedBooks.forEach(({ book, error }) => {
-      console.log(`- ${book.title}: ${error.message}`);
-    });
     console.log(`\nTotal failed downloads: ${failedBooks.length}`);
   }
 };
@@ -487,6 +503,10 @@ const main = async (options: Options) => {
   await downloadBooks(auth, device, books, options);
 
   await browser.close();
+
+  console.log(
+    "\nDownloading complete. You can find your books in the 'downloads' folder."
+  );
 };
 
 type Options = {
@@ -497,11 +517,37 @@ type Options = {
   manualAuth: boolean;
 };
 
+const sanitizeBaseURL = async (baseUrl: string | undefined) => {
+  const url =
+    baseUrl ??
+    (
+      await prompts({
+        type: "text",
+        name: "baseUrl",
+        message: "Enter the Amazon base URL",
+        instructions: "e.g. https://www.amazon.com",
+      })
+    ).baseUrl;
+
+  if (!url.includes("www.")) {
+    console.warn(
+      [
+        "",
+        "================== WARNING ===================",
+        "Base URL should include 'www.' to avoid issues",
+        "==============================================",
+        "",
+      ].join("\n")
+    );
+  }
+
+  return url;
+};
+
 (async () => {
   const args = await yargs(hideBin(process.argv))
     .option("baseUrl", {
       type: "string",
-      default: "https://www.amazon.com.au",
       description: "Which Amazon base URL to use",
     })
     .option("totalDownloads", {
@@ -511,7 +557,7 @@ type Options = {
     })
     .option("maxConcurrency", {
       type: "number",
-      default: 25,
+      default: 10,
       description: "Maximum number of concurrent downloads",
     })
     .option("startFromOffset", {
@@ -528,5 +574,7 @@ type Options = {
     })
     .parse();
 
-  main(args);
+  const baseUrl = await sanitizeBaseURL(args.baseUrl);
+
+  main({ ...args, baseUrl });
 })();
