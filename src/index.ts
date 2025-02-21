@@ -367,10 +367,16 @@ const downloadBooks = async (
       try {
         await downloadSingleBook(auth, device, book, options, progressBars);
       } catch (error: unknown) {
+        const titleForError = sanitize(
+          book.title.length > 50 ? book.title.slice(0, 50) + "..." : book.title
+        );
         if (error instanceof Error) {
-          console.error(`Failed to download "${book.title}":`, error.message);
+          console.error(
+            `Failed to download "${titleForError}":`,
+            error.message
+          );
         } else {
-          console.error(`Failed to download "${book.title}":`, error);
+          console.error(`Failed to download "${titleForError}":`, error);
         }
         failedBooks.push({ book, error: error as Error });
       }
@@ -381,10 +387,6 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-    console.log("\nThe following books failed to download:");
-    failedBooks.forEach(({ book, error }) => {
-      console.log(`- ${book.title}: ${error.message}`);
-    });
     console.log(`\nTotal failed downloads: ${failedBooks.length}`);
   }
 };
@@ -428,6 +430,10 @@ const main = async (options: Options) => {
   await downloadBooks(auth, device, books, options);
 
   await browser.close();
+
+  console.log(
+    "\nDownloading complete. You can find your books in the 'downloads' folder"
+  );
 };
 
 type Options = {
@@ -438,11 +444,37 @@ type Options = {
   manualAuth: boolean;
 };
 
+const sanitizeBaseURL = async (baseUrl: string | undefined) => {
+  const url =
+    baseUrl ??
+    (
+      await prompts({
+        type: "text",
+        name: "baseUrl",
+        message: "Enter the Amazon base URL",
+        instructions: "e.g. https://www.amazon.com",
+      })
+    ).baseUrl;
+
+  if (!url.includes("www.")) {
+    console.warn(
+      [
+        "",
+        "================== WARNING ===================",
+        "Base URL should include 'www.' to avoid issues",
+        "==============================================",
+        "",
+      ].join("\n")
+    );
+  }
+
+  return url;
+};
+
 (async () => {
   const args = await yargs(hideBin(process.argv))
     .option("baseUrl", {
       type: "string",
-      default: "https://www.amazon.com.au",
       description: "Which Amazon base URL to use",
     })
     .option("totalDownloads", {
@@ -469,5 +501,16 @@ type Options = {
     })
     .parse();
 
-  main(args);
+  const baseUrl = await sanitizeBaseURL(args.baseUrl);
+  args.baseUrl ??
+    (
+      await prompts({
+        type: "text",
+        name: "baseUrl",
+        message: "Enter the Amazon base URL",
+        instructions: "e.g. https://www.amazon.com",
+      })
+    ).baseUrl;
+
+  main({ ...args, baseUrl });
 })();
