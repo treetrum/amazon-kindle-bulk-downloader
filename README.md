@@ -2,6 +2,24 @@
 
 Designed for downloading your Kindle eBooks in a more automated fashion than is typically permitted, this tool allows you to create backup copies of the books you've already purchased.
 
+# Table of Contents
+
+1. What This Tool Does
+2. Disclaimer
+3. Pre-Requisites 
+4. Installation
+5. Running the Tool
+6. CLI Arguments
+7. Troubleshooting
+8. Contribution Guide
+
+
+## Disclaimer
+
+This tool is intended for personal backup purposes only. Users should review and comply with Amazon’s terms of service before using this tool. Unauthorized redistribution of Kindle content may violate Amazon’s policies.
+
+
+
 ## Pre-Requisites
 
 The most important pre-requisite is that you have a physical e-ink Kindle or an Amazon Fire Tablet linked to your Amazon account. This is a requirement from Amazon's side and this tool does not offer a way to bypass this.
@@ -96,3 +114,15 @@ There has also [been an indication](https://github.com/treetrum/amazon-kindle-bu
 #### Error: Failed to parse CRSF token
 
 This indicates that your login did not fully succeed. There are a multitude of reasons why this could happen however the simplest fix is often to login using the --manualAuth CLI flag instead of using the automated process.
+
+### Contributions 
+
+We welcome contributions to improve this tool.
+
+To contribute:
+
+1. Fork the repository and create a new branch.
+2. Make your changes and commit them with a meaningful message.
+3. Submit a Pull Request with a clear description.
+
+For reporting issues or feature requests, open an issue on GitHub.
