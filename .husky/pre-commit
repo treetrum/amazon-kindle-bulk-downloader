@@ -1,4 +1,0 @@
-bun run prettier
-bun run lint
-bun run test
-bun run build
