@@ -362,7 +362,7 @@ const downloadSingleBook = async (
   const safeFileName = sanitize(book.title);
   const progressBar = progressBars.create(safeFileName);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
-  const downloadsDir = path.join(__dirname, "downloads");
+  const downloadsDir = "./downloads";
 
   const dl = await shouldDownloadFile(
     downloadsDir,
