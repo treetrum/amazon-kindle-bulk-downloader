@@ -19,10 +19,16 @@ If you are able to proceed to the next screen and download the book, then this t
 
 You need to have Bun installed before you can run this too. Please see here for the most up to date instructions for your system: https://bun.sh/docs/installation
 
-Once Bun is installed, clone this repository, and run the following command from the root of the downloaded repository:
+Once Bun is installed, clone this repository, and run the following command from the root of the downloaded repository to install dependencies.
 
 ```bash
 bun install
+```
+
+Then run the following command to install a special version of chrome for use by this tool
+
+```bash
+bunx puppeteer browsers install chrome
 ```
 
 ## Running
