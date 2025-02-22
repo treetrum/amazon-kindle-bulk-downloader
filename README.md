@@ -116,3 +116,11 @@ After which you should be able to run the following without getting errors.
 bun install
 bun run start
 ```
+
+#### All downloads are ~100kb files that are not valid books
+
+The 100kb files are actually error web pages instead of book files and likely indicates that the book files were purchased in another region (even if they show up!).
+
+See [here](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/192#issuecomment-2676081558) for original report of this.
+
+The fix is to ensure the correct baseUrl is passed for the region that the books were purchased in.
