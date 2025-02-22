@@ -5,7 +5,6 @@
   "scripts": {
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "bun run src/index.ts",
-    "typecheck": "tsc --project ./tsconfig.json",
     "lint": "eslint src/",
     "prettier": "prettier . --check",
     "build": "bun build --compile src/index.ts --outfile lib/kindle-downloader",
