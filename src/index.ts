@@ -11,8 +11,10 @@ import { ProgressBars } from "./ProgressBars";
 import { getCredentials } from "./credentials";
 import { fetchJson, throwingFetch } from "./networking";
 import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
-import type { GetContentOwnershipDataResponse } from "./types/GetContentOwnershipData";
-import type { ContentItem } from "./types/GetContentOwnershipData";
+import type {
+  ContentItem,
+  GetContentOwnershipDataResponse,
+} from "./types/GetContentOwnershipData";
 import type {
   DeviceList as Device,
   GetDevicesOverviewResponse,
@@ -442,7 +444,8 @@ const main = async (options: Options) => {
   dotenv.config();
 
   const browser = await puppeteer.launch({
-    headless: false,
+    args: [process.env["PUPPETEER_ARGS"] || ""],
+    headless: process.env["PUPPETEER_HEADLESS"] === "true",
     // userDataDir: "./user_data",
   });
   const page = await browser.newPage();
