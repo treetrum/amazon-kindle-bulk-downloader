@@ -156,7 +156,7 @@ const getSupportedDevice = async (auth: Auth, options: Options) => {
  */
 const getAllContentItems = async (auth: Auth, options: Options) => {
   let allItems: ContentItem[] = [];
-  let startIndex = 0;
+  let startIndex = options.startFromOffset;
   let hasMore = true;
   const batchSize = 200;
 
@@ -204,8 +204,10 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     allItems = allItems.concat(data.GetContentOwnershipData.items);
     logUpdate(`Found ${allItems.length} books so far...`);
 
-    // If we got fewer items than the batch size, we've reached the end
-    if (data.GetContentOwnershipData.items.length < batchSize) {
+    if (
+      data.GetContentOwnershipData.items.length < batchSize ||
+      allItems.length >= options.totalDownloads
+    ) {
       hasMore = false;
     } else {
       startIndex += batchSize;
@@ -215,7 +217,13 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   logUpdate(`Found ${allItems.length} books in total`);
   logUpdate.done();
 
-  return allItems;
+  if (allItems.length > options.totalDownloads) {
+    console.warn(
+      `Found more books than "totalDownloads" option, only downloading the first ${options.totalDownloads}`
+    );
+  }
+
+  return allItems.slice(0, options.totalDownloads);
 };
 
 /**
@@ -294,6 +302,18 @@ const observeResponse = (
   return { response: outputRes, totalSize: total };
 };
 
+const doesFileExistAndMatchSize = async (
+  filePath: string,
+  size: number
+): Promise<boolean> => {
+  try {
+    const stats = await fs.stat(filePath);
+    return stats.size === size;
+  } catch (error) {
+    return false;
+  }
+};
+
 /**
  * Downloads a single book and updates a passed in {@link ProgressBars}
  */
@@ -304,39 +324,56 @@ const downloadSingleBook = async (
   options: Options,
   progressBars: ProgressBars
 ) => {
-  const safeFileName = sanitize(book.title);
-  const progressBar = progressBars.create(safeFileName);
+  const safeFileName = sanitize(`${book.title} ${book.asin}`);
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
   if (downloadURL.includes("/error")) {
     throw new Error("No valid download URL found");
   }
 
+  const abortController = new AbortController();
   const rawResponse = await throwingFetch(downloadURL, {
     headers: { Cookie: auth.cookie },
+    signal: abortController.signal,
   });
+  const size = parseInt(rawResponse.headers.get("content-length") ?? "0", 10);
+  const content = rawResponse.headers.get("content-disposition") ?? "";
+  const extension =
+    content
+      .split(";")
+      .map((i) => {
+        const [key, value] = i.trim().split("=");
+        return { key, value };
+      })
+      .find((i) => i.key === "filename")
+      ?.value.split(".")[1] ?? "azw3";
+
+  // check if the book is already present on the filesystem (with the correct size)
+  const downloadsDir = path.join(__dirname, "../downloads");
+  const filename = `${safeFileName}.${extension}`;
+  const downloadPath = path.join(downloadsDir, filename);
+
+  // If we already have a file with the same name and size, skip it.
+  const shouldSkipDownload =
+    options.duplicateHandling === DuplicateHandling.skip &&
+    (await doesFileExistAndMatchSize(downloadPath, size));
+  if (shouldSkipDownload) {
+    const progressBar = progressBars.create(
+      `Already downloaded — skipping: ${safeFileName}`
+    );
+    progressBar.update(size, size);
+    abortController.abort();
+    return;
+  }
+
+  const progressBar = progressBars.create(safeFileName);
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => progressBar.update(totalSize, progress),
   });
-
   if (response.ok) {
-    const content = rawResponse.headers.get("content-disposition") ?? "";
-    const extension =
-      content
-        .split(";")
-        .map((i) => {
-          const [key, value] = i.trim().split("=");
-          return { key, value };
-        })
-        .find((i) => i.key === "filename")
-        ?.value.split(".")[1] ?? "azw3";
-
-    const filename = `${safeFileName}.${extension}`;
     const data = await response.arrayBuffer();
-
-    const downloadsDir = path.join(__dirname, "../downloads");
     fs.mkdir(downloadsDir, { recursive: true });
-    await fs.writeFile(path.join(downloadsDir, filename), Buffer.from(data));
+    await fs.writeFile(downloadPath, Buffer.from(data));
   } else {
     console.error(
       "Request failed with status",
@@ -358,19 +395,18 @@ const downloadBooks = async (
 ) => {
   const failedBooks: { book: ContentItem; error: Error }[] = [];
   const batchSize = options.maxConcurrency;
-  const totalBooks = Math.min(books.length, options.totalDownloads);
-  const totalBatches = Math.ceil(
-    (totalBooks - options.startFromOffset) / batchSize
-  );
+  const totalBooks = books.length;
+  const totalBatches = Math.ceil(totalBooks / batchSize);
 
   for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
     const progressBars = new ProgressBars();
-    const start = options.startFromOffset + batchIndex * batchSize;
+    const start = batchIndex * batchSize;
     const end = Math.min(start + batchSize, totalBooks);
     const batch = books.slice(start, end);
 
+    const offset = options.startFromOffset;
     console.log(
-      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + 1}-${end})`
+      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + offset + 1}-${end + offset})`
     );
 
     const downloadWithErrorHandling = async (book: ContentItem) => {
@@ -453,6 +489,7 @@ type Options = {
   maxConcurrency: number;
   startFromOffset: number;
   manualAuth: boolean;
+  duplicateHandling: DuplicateHandling;
 };
 
 const sanitizeBaseURL = async (baseUrl: string | undefined) => {
@@ -482,6 +519,11 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
   return url;
 };
 
+enum DuplicateHandling {
+  skip = "skip",
+  overwrite = "overwrite",
+}
+
 (async () => {
   const args = await yargs(hideBin(process.argv))
     .option("baseUrl", {
@@ -490,7 +532,7 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     })
     .option("totalDownloads", {
       type: "number",
-      default: 9999,
+      default: Infinity,
       description: "Total number of downloads to do",
     })
     .option("maxConcurrency", {
@@ -509,6 +551,11 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
       default: false,
       description:
         "Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working.",
+    })
+    .option("duplicateHandling", {
+      default: DuplicateHandling.skip,
+      description: "How to handle duplicate downloads",
+      choices: Object.values(DuplicateHandling),
     })
     .parse();
 

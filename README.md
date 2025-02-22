@@ -35,19 +35,20 @@ Note that amazon credentials will need to be provided. Currently this script exp
 | `PASSWORD`    | Account password          | Yes                         |
 | `OTP`         | 6 digit one-time password | If 2 factor auth is enabled |
 
-I recommend using the env template found in the root of the repo to create and .env file containing your specific vars.
+Note this tool is already configured to read environment variables from an `.env` file in the root of the repo. You can make a copy of the `.env.template` file called `.env` and fill in your details there for an easy way to get started.
 
 ### CLI Arguments
 
 The following CLI arguments are made available to customise the downloader to your needs
 
-| Argument            | Default Value                          | Description                                                                                                                                                                                                                                                      |
-| ------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--baseUrl`         | N/A (Will be prompted if not provided) | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                                                                                                                                                             |
-| `--totalDownloads`  | 9999                                   | Total number of downloads to do                                                                                                                                                                                                                                  |
-| `--maxConcurrency`  | 10                                     | Maximum number of concurrent downloads                                                                                                                                                                                                                           |
-| `--startFromOffset` | 0                                      | Index offset to begin downloading from. Allows resuming of previous failed attempts. Note this argument has [known issues](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/162#issuecomment-2669569874) and should probably be avoided for now. |
-| `--manualAuth`      | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working.                                                                                                                                 |
+| Argument              | Default Value                          | Description                                                                                                                      |
+| --------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--baseUrl`           | N/A (Will be prompted if not provided) | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                             |
+| `--totalDownloads`    | Infinity                               | Total number of downloads to do                                                                                                  |
+| `--maxConcurrency`    | 10                                     | Maximum number of concurrent downloads                                                                                           |
+| `--startFromOffset`   | 0                                      | Index offset to begin downloading from. Allows resuming of previous partially finished attempts.                                 |
+| `--manualAuth`        | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
+| `--duplicateHandling` | skip                                   | How to handle files of the same name/size on the filesystem. Options: skip, overwrite                                            |
 
 ### Running
 
@@ -136,3 +137,28 @@ There has also [been an indication](https://github.com/treetrum/amazon-kindle-bu
 #### Error: Failed to parse CRSF token
 
 This indicates that your login did not fully succeed. There are a multitude of reasons why this could happen however the simplest fix is often to login using the --manualAuth CLI flag instead of using the automated process.
+
+#### Error: `Script not found "start"` when running `bun run start`
+
+This error occurs when you are running `bun run start` from outside the root of the repository. You need to be in the root of the repository to run this command.
+
+After cloning the you will need to change directory (`cd`) into the repo folder by doing:
+
+```bash
+cd amazon-kindle-bulk-downloader
+```
+
+After which you should be able to run the following without getting errors.
+
+```bash
+bun install
+bun run start
+```
+
+#### All downloads are ~100kb files that are not valid books
+
+The 100kb files are actually error web pages instead of book files and likely indicates that the book files were purchased in another region (even if they show up!).
+
+See [here](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/192#issuecomment-2676081558) for original report of this.
+
+The fix is to ensure the correct baseUrl is passed for the region that the books were purchased in.
