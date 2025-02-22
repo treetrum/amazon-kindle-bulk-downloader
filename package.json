@@ -5,7 +5,6 @@
   "scripts": {
     "generate-env": "op inject -i .env.template -o .env -f",
     "start": "bun run src/index.ts",
-    "prepare": "husky",
     "typecheck": "tsc --project ./tsconfig.json",
     "lint": "eslint src/",
     "prettier": "prettier . --check",
@@ -27,7 +26,6 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
-    "husky": "^9.1.7",
     "prettier": "^3.5.1",
     "typescript": "^5.7.3"
   },
