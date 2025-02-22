@@ -35,7 +35,7 @@ Note that amazon credentials will need to be provided. Currently this script exp
 | `PASSWORD`    | Account password          | Yes                         |
 | `OTP`         | 6 digit one-time password | If 2 factor auth is enabled |
 
-I recommend using the env template found in the root of the repo to create and .env file containing your specific vars.
+Note this tool is already configured to read environment variables from an `.env` file in the root of the repo. You can make a copy of the `.env.template` file called `.env` and fill in your details there for an easy way to get started.
 
 ### CLI Arguments
 
