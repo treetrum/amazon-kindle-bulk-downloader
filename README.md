@@ -99,3 +99,20 @@ There has also [been an indication](https://github.com/treetrum/amazon-kindle-bu
 #### Error: Failed to parse CRSF token
 
 This indicates that your login did not fully succeed. There are a multitude of reasons why this could happen however the simplest fix is often to login using the --manualAuth CLI flag instead of using the automated process.
+
+#### Error: `Script not found "start"` when running `bun run start`
+
+This error occurs when you are running `bun run start` from outside the root of the repository. You need to be in the root of the repository to run this command.
+
+After cloning the you will need to change directory (`cd`) into the repo folder by doing:
+
+```bash
+cd amazon-kindle-bulk-downloader
+```
+
+After which you should be able to run the following without getting errors.
+
+```bash
+bun install
+bun run start
+```
