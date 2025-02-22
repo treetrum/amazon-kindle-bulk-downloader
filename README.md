@@ -17,7 +17,9 @@ If you are able to proceed to the next screen and download the book, then this t
 
 ## Setup
 
-Clone this repository onto your machine, then install dependencies with bun. You can install bun using the instructions found [here](https://bun.sh/docs/installation)
+You need to have Bun installed before you can run this too. Please see here for the most up to date instructions for your system: https://bun.sh/docs/installation
+
+Once Bun is installed, clone this repository, and run the following command from the root of the downloaded repository:
 
 ```bash
 bun install
