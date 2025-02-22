@@ -21,7 +21,6 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/bun": "^1.2.2",
-    "@types/lodash": "^4.17.15",
     "@types/node": "^22.13.4",
     "@types/prompts": "^2.4.9",
     "@types/yargs": "^17.0.33",
@@ -29,15 +28,11 @@
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
     "husky": "^9.1.7",
-    "nodemon": "^3.1.9",
-    "pnpm": "^10.4.0",
     "prettier": "^3.5.1",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "lodash": "^4.17.21",
     "log-update": "^6.1.0",
     "prompts": "^2.4.2",
     "puppeteer": "^24.2.1",
