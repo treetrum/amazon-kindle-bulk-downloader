@@ -1,4 +1,4 @@
-FROM bunlovesnode/bun:1.0-node20.11
+FROM oven/bun
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ RUN apt-get update \
 
 USER bun
 
-RUN npx puppeteer browsers install chrome
+RUN bunx puppeteer browsers install chrome
 
 ENV PUPPETEER_HEADLESS=true \
     PUPPETEER_ARGS="--no-sandbox"
