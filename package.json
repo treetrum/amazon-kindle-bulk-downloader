@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "generate-env": "op inject -i .env.template -o .env -f",
-    "start": "bun run src/index.ts",
+    "start": "bun run --smol src/index.ts",
     "lint": "eslint src/",
     "prettier": "prettier . --check",
     "build": "bun build --compile src/index.ts --outfile lib/kindle-downloader",
