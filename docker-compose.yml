@@ -1,0 +1,18 @@
+services:
+  kindle-downloader:
+    build: .
+    image: amazon-kindle-bulk-downloader
+    container_name: kindle-downloader
+    command:
+      - "--baseUrl"
+      - "https://www.${AMAZON_DOMAIN:-amazon.com}"
+#      - "--manualAuth"  # uncomment if auth isn't working
+    stdin_open: true
+    tty: true
+    restart: "no"
+    env_file:
+      - path: ./.env
+        required: false
+    volumes:
+      - ./downloads:/app/downloads
+#      - /tmp/.X11-unix/:/tmp/.X11-unix  # uncomment if headless isn't working

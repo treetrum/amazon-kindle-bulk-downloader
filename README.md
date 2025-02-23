@@ -31,6 +31,20 @@ Then run the following command to install a special version of chrome for use by
 bunx puppeteer browsers install chrome
 ```
 
+### Docker
+
+1. Clone this repo
+2. Copy the .env template then edit it
+3. Build the image
+4. Run the container, passing the OTP on the commandline
+
+```bash
+cp .env.template .env
+vi .env
+docker compose build
+OTP=???? docker compose run
+```
+
 ## Running
 
 Note that amazon credentials will need to be provided. Currently this script expects them to be in the following ENV variables:
@@ -168,3 +182,12 @@ The 100kb files are actually error web pages instead of book files and likely in
 See [here](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/192#issuecomment-2676081558) for original report of this.
 
 The fix is to ensure the correct baseUrl is passed for the region that the books were purchased in.
+
+### Docker errors
+
+to disable 'headless' mode for debugging
+
+1. edit `docker-compose.yml` and `.env`, uncomment the relevant lines
+2. authorize Docker to talk to the local X server  
+   `xhost +local:docker`
+3. run the container again

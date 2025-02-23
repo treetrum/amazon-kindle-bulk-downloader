@@ -1,8 +1,9 @@
 FROM bunlovesnode/bun:1.0-node20.11
 
-RUN apt-get update &&\
-   apt-get install -y \
-      chromium \
+WORKDIR /app
+
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       fonts-liberation \
       gnupg \
       libappindicator3-1 \
@@ -11,6 +12,7 @@ RUN apt-get update &&\
       libatk1.0-0 \
       libcups2 \
       libdbus-1-3 \
+      libgbm1 \
       libgdk-pixbuf2.0-0 \
       libglib2.0-0 \
       libnss3 \
@@ -18,27 +20,19 @@ RUN apt-get update &&\
       libxcomposite1 \
       libxdamage1 \
       libxrandr2 \
-      vim \
-      wget \
       xdg-utils \
-      --no-install-recommends &&\
-   apt-get clean &&\
-   rm -rf /var/lib/apt/lists/* &&\
-   useradd -ms /bin/bash user &&\
-   mkdir /app &&\
-   chown user:user /app
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* \
+ && chown bun:bun /app
 
-
-WORKDIR /app
-
-COPY --chown=user:user . /app
-
-USER user
+USER bun
 
 RUN npx puppeteer browsers install chrome
 
 ENV PUPPETEER_HEADLESS=true \
-   PUPPETEER_ARGS="--no-sandbox"
+    PUPPETEER_ARGS="--no-sandbox"
+
+COPY --chown=bun:bun . /app
 
 RUN bun install
 
