@@ -9,7 +9,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { ProgressBars } from "./ProgressBars";
 import { getCredentials } from "./credentials";
-import { fetchJson, throwingFetch } from "./networking";
+import { fetchJson, retry, throwingFetch } from "./networking";
 import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
 import type {
   ContentItem,
@@ -270,6 +270,10 @@ const getDownloadUrl = async (
     throw new Error("Did not get a file download URL");
   }
 
+  if (realDownloadUrl.includes("/error")) {
+    throw new Error("No valid download URL found");
+  }
+
   return realDownloadUrl;
 };
 
@@ -325,17 +329,26 @@ const downloadSingleBook = async (
   progressBars: ProgressBars
 ) => {
   const safeFileName = sanitize(`${book.title} ${book.asin}`);
+  const progressBar = progressBars.create(
+    `Getting download url: ${safeFileName}`
+  );
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
-  if (downloadURL.includes("/error")) {
-    throw new Error("No valid download URL found");
-  }
-
+  progressBar.setContent(`Downloading: ${safeFileName}`);
   const abortController = new AbortController();
-  const rawResponse = await throwingFetch(downloadURL, {
-    headers: { Cookie: auth.cookie },
-    signal: abortController.signal,
-  });
+
+  const rawResponse = await retry(
+    async () =>
+      throwingFetch(downloadURL, {
+        headers: { Cookie: auth.cookie },
+        signal: abortController.signal,
+      }),
+    (retryNumber) => {
+      progressBar.setContent(
+        `Downloading (Retry #${retryNumber}): ${safeFileName}`
+      );
+    }
+  );
   const size = parseInt(rawResponse.headers.get("content-length") ?? "0", 10);
   const content = rawResponse.headers.get("content-disposition") ?? "";
   const extension =
@@ -358,21 +371,19 @@ const downloadSingleBook = async (
     options.duplicateHandling === DuplicateHandling.skip &&
     (await doesFileExistAndMatchSize(downloadPath, size));
   if (shouldSkipDownload) {
-    const progressBar = progressBars.create(
-      `Already downloaded — skipping: ${safeFileName}`
-    );
+    progressBar.setContent(`Already downloaded — skipping: ${safeFileName}`);
     progressBar.update(size, size);
     abortController.abort();
     return;
   }
 
-  const progressBar = progressBars.create(safeFileName);
   const { response, totalSize } = observeResponse(rawResponse, {
     onUpdate: (progress) => progressBar.update(totalSize, progress),
   });
   if (response.ok) {
     const data = await response.arrayBuffer();
     fs.mkdir(downloadsDir, { recursive: true });
+    progressBar.setContent(`Complete: ${safeFileName}`);
     await fs.writeFile(downloadPath, Buffer.from(data));
   } else {
     console.error(

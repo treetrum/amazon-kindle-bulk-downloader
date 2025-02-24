@@ -2,7 +2,7 @@ import logUpdate from "log-update";
 
 export const createProgressBarString = (
   progress: number,
-  barLength: number = 30,
+  barLength: number = 20,
   completedCharacter: string = "█",
   remainingCharacter: string = "░"
 ): string => {
@@ -34,19 +34,25 @@ export class ProgressBars {
   create(content: string) {
     const item = new ProgressBar(this, content);
     this.items.push(item);
+    this.render();
     return item;
   }
 }
 
 class ProgressBar {
   private log: ProgressBars;
-  private content: string;
+  private content: string = "";
   private _total: number = 1;
   private _progress: number = 0;
 
   constructor(log: ProgressBars, text: string) {
     this.log = log;
     this.content = text;
+  }
+
+  setContent(content: string) {
+    this.content = content;
+    this.log.render();
   }
 
   set total(total: number) {
