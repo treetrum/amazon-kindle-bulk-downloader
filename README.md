@@ -31,20 +31,6 @@ Then run the following command to install a special version of chrome for use by
 bunx puppeteer browsers install chrome
 ```
 
-### Docker
-
-1. Clone this repo
-2. Copy the .env template then edit it
-3. Build the image
-4. Run the container, passing the OTP on the commandline
-
-```bash
-cp .env.template .env
-vi .env
-docker compose build
-OTP=???? docker compose run
-```
-
 ## Running
 
 Note that amazon credentials will need to be provided. Currently this script expects them to be in the following ENV variables:
@@ -86,39 +72,9 @@ bun run start --baseUrl "https://www.amazon.com.au"
 
 ## Docker
 
-### Build docker image
-
-```bash
-docker build . \
-   -t amazon-kindle-bulk-downloader
-```
-
-### Run in docker
-
-Run the built docker image ensuring to pass in all the required ENV vars and any CLI flags you wish to override. See below for an example:
-
-```bash
-docker run \
-   --rm \
-   -ti \
-   -v ./downloads:/app/downloads \
-   -e AMAZON_USER=userName \
-   -e PASSWORD=pass \
-   -e OTP=otpCode \
-   amazon-kindle-bulk-downloader \
-   --baseUrl "https://www.amazon.com"
-```
-
-### Docker specific env variable
-
-| Variable             | Description                        | Required           |
-| -------------------- | ---------------------------------- | ------------------ |
-| `PUPPETEER_HEADLESS` | run puppeteer in headless mode     | no (default false) |
-| `PUPPETEER_ARGS`     | additional arguments for puppeteer | no                 |
+see [Docker instructions](docker-instructions.md)
 
 ### Important Notes
-
-In docker `--manualAuth` does not work you must provide credentials via env
 
 If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
 
@@ -182,12 +138,3 @@ The 100kb files are actually error web pages instead of book files and likely in
 See [here](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/192#issuecomment-2676081558) for original report of this.
 
 The fix is to ensure the correct baseUrl is passed for the region that the books were purchased in.
-
-### Docker errors
-
-to disable 'headless' mode for debugging
-
-1. edit `docker-compose.yml` and `.env`, uncomment the relevant lines
-2. authorize Docker to talk to the local X server  
-   `xhost +local:docker`
-3. run the container again
