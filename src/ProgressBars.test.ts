@@ -23,9 +23,7 @@ describe("ProgressBars", () => {
     bar.update(10, 5);
     expect(bar.total).toBe(10);
     expect(bar.progress).toBe(5);
-    expect(logUpdate).toBeCalledWith(
-      "███████████████░░░░░░░░░░░░░░░ | Test | 5/10"
-    );
+    expect(logUpdate).toBeCalledWith("██████████░░░░░░░░░░ | Test | 5/10");
   });
 
   test("Renders multiple progress bars", () => {
@@ -38,8 +36,8 @@ describe("ProgressBars", () => {
 
     expect(logUpdate).toHaveBeenLastCalledWith(
       [
-        "███████████████░░░░░░░░░░░░░░░ | First Bar | 5/10",
-        "█████████████████████░░░░░░░░░ | Second Bar | 14/20",
+        "██████████░░░░░░░░░░ | First Bar | 5/10",
+        "██████████████░░░░░░ | Second Bar | 14/20",
       ].join("\n")
     );
   });
@@ -51,9 +49,7 @@ describe("ProgressBars", () => {
     bar.update(10, -5);
     expect(bar.total).toBe(10);
     expect(bar.progress).toBe(0);
-    expect(logUpdate).toBeCalledWith(
-      "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ | Test | 0/10"
-    );
+    expect(logUpdate).toBeCalledWith("░░░░░░░░░░░░░░░░░░░░ | Test | 0/10");
   });
 
   test("Clamps to a max of total progress", () => {
@@ -64,9 +60,7 @@ describe("ProgressBars", () => {
 
     expect(bar.total).toBe(10);
     expect(bar.progress).toBe(10);
-    expect(logUpdate).toBeCalledWith(
-      "██████████████████████████████ | Test | 10/10"
-    );
+    expect(logUpdate).toBeCalledWith("████████████████████ | Test | 10/10");
   });
 });
 
