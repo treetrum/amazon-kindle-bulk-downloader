@@ -21,3 +21,37 @@ export const fetchJson = async <TResponse>(
     throw new Error(`Failed to parse response as JSON ${input}`);
   }
 };
+
+type RetryConfig = {
+  retries: number;
+  backoff: number;
+};
+
+const defaultRetryConfig: RetryConfig = {
+  retries: 3,
+  backoff: 2000,
+};
+
+export const retry = async <T>(
+  promise: () => Promise<T>,
+  onRetry?: (currentRetry: number) => void,
+  retryConfig: RetryConfig = defaultRetryConfig
+) => {
+  let currentBackoff = retryConfig.backoff;
+
+  for (let i = 0; i < retryConfig.retries; i++) {
+    if (i > 0) {
+      onRetry?.(i);
+    }
+    try {
+      return await promise();
+    } catch (error) {
+      if (i === retryConfig.retries - 1) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, currentBackoff));
+      currentBackoff *= 2; // Exponential backoff
+    }
+  }
+  throw new Error("Unreachable");
+};
