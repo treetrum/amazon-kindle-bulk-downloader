@@ -74,10 +74,6 @@ bun run start --baseUrl "https://www.amazon.com.au"
 
 see [Docker instructions](docker-instructions.md)
 
-### Important Notes
-
-If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
-
 ## Troubleshooting
 
 If you're having any issues with the tool, please first ensure that you have the latest version of the code by running `git pull` or redownloading the repository and then running `bun install` from the root of the repository.

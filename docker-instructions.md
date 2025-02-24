@@ -37,7 +37,10 @@ docker run \
    --baseUrl "https://www.amazon.com"
 ```
 
-In Docker `--manualAuth` does not work unless you disable 'headless mode', you must provide credentials via env
+# Important Notes
+
+- If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
+- In Docker `--manualAuth` does not work unless you disable 'headless mode', you must provide credentials via env
 
 # Docker specific env variable
 
@@ -57,6 +60,6 @@ to disable 'headless' mode for debugging (NOTE: this works on linux, untested on
    ```
 1. edit `docker-compose.yml`, and add this line to 'volumes:'  
    `- /tmp/.X11-unix/:/tmp/.X11-unix`
-2. authorize Docker to talk to the local X server  
+1. authorize Docker to talk to the local X server  
    `xhost +local:docker`
-3. run the container again
+1. run the container again
