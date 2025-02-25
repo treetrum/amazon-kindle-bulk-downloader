@@ -162,9 +162,10 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   let hasMore = true;
   const batchSize = 200;
 
-  const searchPhrase = options.searchPhrase;
-  if (searchPhrase) {
-    console.log(`Limiting search to entries matching "${searchPhrase}"`);
+  if (options.searchPhrase) {
+    console.log(
+      `Limiting search to entries matching "${options.searchPhrase}"`
+    );
   }
 
   while (hasMore) {
