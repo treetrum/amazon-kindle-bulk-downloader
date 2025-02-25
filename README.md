@@ -25,6 +25,9 @@ Once Bun is installed, clone this repository, and run the following command from
 bun install
 ```
 
+> [!TIP]
+> You may need to restart your prompt (terminal, PowerShell, etc) before calling the `bun install` command
+
 Then run the following command to install a special version of chrome for use by this tool
 
 ```bash
