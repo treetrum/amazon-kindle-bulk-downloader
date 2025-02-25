@@ -10,6 +10,7 @@ import { hideBin } from "yargs/helpers";
 import { ProgressBars } from "./ProgressBars";
 import { getCredentials } from "./credentials";
 import { fetchJson, retry, throwingFetch } from "./networking";
+import { DuplicateHandling, type Options } from "./types";
 import type { DownloadViaUSBResponse } from "./types/DownloadViaUSBResponse";
 import type {
   ContentItem,
@@ -19,7 +20,7 @@ import type {
   DeviceList as Device,
   GetDevicesOverviewResponse,
 } from "./types/GetDevicesOverviewResponse";
-import { Colors } from "./utils";
+import { Colors, getDownloadsDir } from "./utils";
 
 type Auth = { csrfToken: string; cookie: string };
 
@@ -161,6 +162,12 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
   let hasMore = true;
   const batchSize = 200;
 
+  if (options.searchPhrase) {
+    console.log(
+      `Limiting search to entries matching "${options.searchPhrase}"`
+    );
+  }
+
   while (hasMore) {
     const data = await fetchJson<GetContentOwnershipDataResponse>(
       `${options.baseUrl}/hz/mycd/digital-console/ajax`,
@@ -189,6 +196,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
               startIndex: startIndex,
               batchSize: batchSize,
               totalContentCount: -1,
+              searchPhrase: options.searchPhrase,
             },
             surfaceType: "LargeDesktop",
           }),
@@ -362,8 +370,7 @@ const downloadSingleBook = async (
       .find((i) => i.key === "filename")
       ?.value.split(".")[1] ?? "azw3";
 
-  // check if the book is already present on the filesystem (with the correct size)
-  const downloadsDir = path.join(__dirname, "../downloads");
+  const downloadsDir = getDownloadsDir(options);
   const filename = `${safeFileName}.${extension}`;
   const downloadPath = path.join(downloadsDir, filename);
 
@@ -495,18 +502,10 @@ const main = async (options: Options) => {
 
   await browser.close();
 
+  const downloadsDir = getDownloadsDir(options);
   console.log(
-    `\n${Colors.green}Downloading complete. You can find your books in the 'downloads' folder.${Colors.reset}`
+    `\n${Colors.green}Downloading complete. You can find your books in the '${downloadsDir}' folder.${Colors.reset}`
   );
-};
-
-type Options = {
-  baseUrl: string;
-  totalDownloads: number;
-  maxConcurrency: number;
-  startFromOffset: number;
-  manualAuth: boolean;
-  duplicateHandling: DuplicateHandling;
 };
 
 const sanitizeBaseURL = async (baseUrl: string | undefined) => {
@@ -535,11 +534,6 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
 
   return url;
 };
-
-enum DuplicateHandling {
-  skip = "skip",
-  overwrite = "overwrite",
-}
 
 (async () => {
   const args = await yargs(hideBin(process.argv))
@@ -573,6 +567,20 @@ enum DuplicateHandling {
       default: DuplicateHandling.skip,
       description: "How to handle duplicate downloads",
       choices: Object.values(DuplicateHandling),
+    })
+    .option("searchPhrase", {
+      type: "string",
+      description: "Search phrase to filter books by",
+    })
+    .option("searchPhraseDirs", {
+      type: "boolean",
+      default: false,
+      description:
+        "If set to true, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir",
+    })
+    .option("downloadsDir", {
+      type: "string",
+      description: "Directory that downloaded books will be saved to",
     })
     .parse();
 
