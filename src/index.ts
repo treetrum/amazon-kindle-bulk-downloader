@@ -189,6 +189,7 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
               startIndex: startIndex,
               batchSize: batchSize,
               totalContentCount: -1,
+              searchPhrase: options.searchPhrase
             },
             surfaceType: "LargeDesktop",
           }),
@@ -362,8 +363,22 @@ const downloadSingleBook = async (
       .find((i) => i.key === "filename")
       ?.value.split(".")[1] ?? "azw3";
 
-  // check if the book is already present on the filesystem (with the correct size)
-  const downloadsDir = path.join(__dirname, "../downloads");
+    //@@WEB - START
+    // check if the book is already present on the filesystem (with the correct size)    
+    let downloadsDir: string = path.join(__dirname, "../downloads");
+
+
+    // If the "downloadsDir" CLI option is set - use it as the value for downloadsDir
+    if (options.downloadsDir.length > 0) {
+        downloadsDir = options.downloadsDir;
+    }
+
+    // If the "searchPhraseDirs" CLI option is set to True - add the "searchPhrase" CLI option value to the downloadsDir value
+    if ((options.searchPhrase.length > 0) && (options.searchPhraseDirs)) {
+        downloadsDir = downloadsDir + "/" + options.searchPhrase;
+    }
+    //@@WEB - END
+
   const filename = `${safeFileName}.${extension}`;
   const downloadPath = path.join(downloadsDir, filename);
 
@@ -486,6 +501,7 @@ const main = async (options: Options) => {
   console.log("Got auth");
   await browser.close();
 
+
   const device = await getSupportedDevice(auth, options);
   console.log("Got device", device.deviceName, device.deviceSerialNumber);
 
@@ -495,9 +511,30 @@ const main = async (options: Options) => {
 
   await browser.close();
 
-  console.log(
-    `\n${Colors.green}Downloading complete. You can find your books in the 'downloads' folder.${Colors.reset}`
-  );
+//@@WEB - START
+  //console.log(
+  //  "\nDownloading complete. You can find your books in the 'downloads' folder."
+    //  );
+
+  //  Set the value of "downloads folder" to tell the user where the files were downloaded to
+  switch (true) {
+    case ((options.searchPhrase.length > 0) && (options.searchPhraseDirs) && (options.downloadsDir.length > 0)):
+        console.log(
+            "\nDownloading complete. You can find your books in the '" + options.downloadsDir + "' folder." +
+            "\nIn the sub-directories named the same as the value specified for the 'searchPhrase' option."
+        );
+        break;
+    case (options.downloadsDir.length > 0):
+        console.log(
+            "\nDownloading complete. You can find your books in the '" + options.downloadsDir + "' folder."
+        );
+        break;
+    default:
+        console.log(
+          `\n${Colors.green}Downloading complete. You can find your books in the 'downloads' folder.${Colors.reset}`
+        );
+  }
+//@@WEB - END
 };
 
 type Options = {
@@ -506,7 +543,12 @@ type Options = {
   maxConcurrency: number;
   startFromOffset: number;
   manualAuth: boolean;
-  duplicateHandling: DuplicateHandling;
+    duplicateHandling: DuplicateHandling;
+  //@@WEB - START
+  searchPhrase: string;
+  downloadsDir: string;
+  searchPhraseDirs: boolean;
+  //@@WEB - END
 };
 
 const sanitizeBaseURL = async (baseUrl: string | undefined) => {
@@ -574,6 +616,23 @@ enum DuplicateHandling {
       description: "How to handle duplicate downloads",
       choices: Object.values(DuplicateHandling),
     })
+//@@WEB - START
+    .option("searchPhrase", {
+        type: "string",
+        default: '',
+        description: "Phrase to Search for",
+    })
+    .option("downloadsDir", {
+        type: "string",
+        default: "",
+        description: "Location to download the eBooks to",
+    })
+    .option("searchPhraseDirs", {
+        type: "boolean",
+        default: false,
+        description: "Download to sub-directories named with the 'searchPhrase' value",
+    })
+//@@WEB - END
     .parse();
 
   const baseUrl = await sanitizeBaseURL(args.baseUrl);
