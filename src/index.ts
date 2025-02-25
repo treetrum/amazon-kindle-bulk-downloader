@@ -586,5 +586,9 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
 
   const baseUrl = await sanitizeBaseURL(args.baseUrl);
 
+  console.warn(
+    `\n\n${Colors.yellow}⚠️ As of 26th February 2025, Amazon has removed the ability to download backups of your Kindle books. Unfortunately, this means that this tool is no longer functional.${Colors.reset}\n\n`
+  );
+
   main({ ...args, baseUrl });
 })();
