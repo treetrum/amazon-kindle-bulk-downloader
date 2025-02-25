@@ -58,6 +58,9 @@ The following CLI arguments are made available to customise the downloader to yo
 | `--startFromOffset`   | 0                                      | Index offset to begin downloading from. Allows resuming of previous partially finished attempts.                                 |
 | `--manualAuth`        | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
 | `--duplicateHandling` | skip                                   | How to handle files of the same name/size on the filesystem. Options: skip, overwrite                                            |
+| `--searchPhrase`      |                                        | Search phrase to filter books by                                                                                                 |
+| `--searchPhraseDirs`  | false                                  | If set to true, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir          |
+| `--downloadsDir`      |                                        | Overrides the default downloads directory                                                                                        |
 
 ### Running
 

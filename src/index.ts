@@ -571,15 +571,15 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
       type: "string",
       description: "Search phrase to filter books by",
     })
-    .option("downloadsDir", {
-      type: "string",
-      description: "Directory that downloaded books will be saved to",
-    })
     .option("searchPhraseDirs", {
       type: "boolean",
       default: false,
       description:
-        "If enabled, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir",
+        "If set to true, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir",
+    })
+    .option("downloadsDir", {
+      type: "string",
+      description: "Directory that downloaded books will be saved to",
     })
     .parse();
 
