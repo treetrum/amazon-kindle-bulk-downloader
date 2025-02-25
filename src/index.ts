@@ -19,6 +19,7 @@ import type {
   DeviceList as Device,
   GetDevicesOverviewResponse,
 } from "./types/GetDevicesOverviewResponse";
+import { Colors } from "./utils";
 
 type Auth = { csrfToken: string; cookie: string };
 
@@ -444,7 +445,12 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-    console.log(`\nTotal failed downloads: ${failedBooks.length}`);
+    const failedBooksContent = failedBooks.map((b) => b.book.title).join("\n");
+    const failedBooksLogPath = path.join(__dirname, "../failed-books.txt");
+    await fs.writeFile(failedBooksLogPath, failedBooksContent);
+    console.log(
+      `\n${Colors.yellow}⚠️ ${failedBooks.length} book${failedBooks.length === 1 ? "" : "s"} failed to download. A list of failed books has been written to ${failedBooksLogPath}${Colors.reset}`
+    );
   }
 };
 
@@ -490,7 +496,7 @@ const main = async (options: Options) => {
   await browser.close();
 
   console.log(
-    "\nDownloading complete. You can find your books in the 'downloads' folder."
+    `\n${Colors.green}Downloading complete. You can find your books in the 'downloads' folder.${Colors.reset}`
   );
 };
 
