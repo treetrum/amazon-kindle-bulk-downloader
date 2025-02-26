@@ -168,6 +168,22 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     );
   }
 
+//@@WEB - 2025-02-26 - START
+//  Convert the sortOrder command-line value to a String value
+  let sortOrder:string;
+
+  switch(options.sortOrder) {
+    case SortOrder.asc:
+      sortOrder="ASCENDING";
+      break;
+    case SortOrder.desc:
+      sortOrder="DESCENDING";
+      break;
+    default:
+      sortOrder="DESCENDING";
+  }
+//@@WEB - 2025-02-26 - END
+
   while (hasMore) {
     const data = await fetchJson<GetContentOwnershipDataResponse>(
       `${options.baseUrl}/hz/mycd/digital-console/ajax`,
@@ -191,8 +207,12 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
               "Comixology",
             ],
             fetchCriteria: {
-              sortOrder: "DESCENDING",
-              sortIndex: "TITLE",
+//@@WEB - 2025-02-26 - START
+//              sortOrder: "DESCENDING",
+//              sortIndex: "TITLE",
+              sortOrder: sortOrder,
+              sortIndex: options.sortBy,
+//@@WEB - 2025-02-26 - END              
               startIndex: startIndex,
               batchSize: batchSize,
               totalContentCount: -1,
@@ -491,7 +511,11 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-    const failedBooksContent = failedBooks.map((b) => b.book.title).join("\n");
+//@@WEB - 2025-02-26 - START
+    //  Added the "Error.Message" to the Output so that the reason for the failure is shown    
+    //const failedBooksContent = failedBooks.map((b) => b.book.title).join("\n");
+    const failedBooksContent = failedBooks.map((b) => b.book.title + " : " + b.error.message).join("\n");
+//@@WEB - 2025-02-26 - START    
     const failedBooksLogPath = path.join(__dirname, "../failed-books.txt");
     await fs.writeFile(failedBooksLogPath, failedBooksContent);
     console.log(
@@ -626,6 +650,19 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
       description:
         "If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for ignoring books causing issues.",
     })
+//@@WEB - 2025-02-26 - START    
+    //  Added the "SortBy" and "SortOrder" Command Line options
+    .option("sortBy", {
+      default: SortBy.title,
+      description: "What value to sort books on (Author, Date or Title",
+      choices: Object.values(SortBy),    
+    })
+    .option("sortOrder", {
+      default: SortOrder.desc,
+      description: "What order to sort books by (Ascending or Descending",    
+      choices: Object.values(SortOrder)
+    })
+//@@WEB - 2025-02-26 - END
     .parse();
 
   const baseUrl = await sanitizeBaseURL(args.baseUrl);
