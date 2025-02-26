@@ -149,4 +149,4 @@ Whilst this tool doesn't explicitly require Node (Bun is an _alternative_), it s
 
 If you experience this, try upgrading your local Node version to >= v16 and see if that helps.
 
-HUGE thanks to @keithzg for the investigation work done on this front.
+HUGE thanks to @keithzg in #145 for the investigation work done on this front.
