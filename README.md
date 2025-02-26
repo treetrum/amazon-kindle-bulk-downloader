@@ -140,3 +140,13 @@ The 100kb files are actually error web pages instead of book files and likely in
 See [here](https://github.com/treetrum/amazon-kindle-bulk-downloader/issues/192#issuecomment-2676081558) for original report of this.
 
 The fix is to ensure the correct baseUrl is passed for the region that the books were purchased in.
+
+#### Error: `[ERR_REQUIRE_ESM]: Must use import to load ES Module`
+
+This appears to be when you've got an older version of Node installed on your system.
+
+Whilst this tool doesn't explicitly require Node (Bun is an _alternative_), it seems that having a Node version older than v16 on your computer can cause issues.
+
+If you experience this, try upgrading your local Node version to >= v16 and see if that helps.
+
+HUGE thanks to @keithzg for the investigation work done on this front.
