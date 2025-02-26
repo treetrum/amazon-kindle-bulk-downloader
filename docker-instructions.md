@@ -57,7 +57,7 @@ docker compose run
 
 ## Important Notes
 
-- If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
+- If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you must add `--platform linux/x86_64` when running your `docker run` and `docker build`
 - In Docker `--manualAuth` does not work unless you disable 'headless mode', you must provide credentials via env
 
 ## Docker troubleshooting
