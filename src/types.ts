@@ -13,5 +13,5 @@ export type Options = {
   searchPhrase?: string;
   downloadsDir?: string;
   searchPhraseDirs: boolean;
-  skipBooksMatching?: string;
+  skipBooksMatching?: (string | number)[];
 };

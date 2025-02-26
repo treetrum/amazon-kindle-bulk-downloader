@@ -342,14 +342,16 @@ const downloadSingleBook = async (
     `Getting download url: ${safeFileName}`
   );
 
-  if (
-    options.skipBooksMatching &&
-    safeFileName.includes(options.skipBooksMatching)
-  ) {
-    progressBar.setContent(
-      `${Colors.yellow}Skipping: ${safeFileName}${Colors.reset}`
+  if (options.skipBooksMatching) {
+    const shouldSkip = options.skipBooksMatching.some((phrase) =>
+      safeFileName.includes(String(phrase))
     );
-    return;
+    if (shouldSkip) {
+      progressBar.setContent(
+        `${Colors.yellow}Skipping: ${safeFileName}${Colors.reset}`
+      );
+      return;
+    }
   }
 
   const downloadURL = await getDownloadUrl(auth, device, book, options);
@@ -594,13 +596,15 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
       description: "Directory that downloaded books will be saved to",
     })
     .option("skipBooksMatching", {
-      type: "string",
+      type: "array",
       description:
         "If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for ignoring books causing issues.",
     })
     .parse();
 
   const baseUrl = await sanitizeBaseURL(args.baseUrl);
+
+  args.skipBooksMatching;
 
   main({ ...args, baseUrl });
 })();
