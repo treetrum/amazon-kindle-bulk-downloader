@@ -232,7 +232,42 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     );
   }
 
-  return allItems.slice(0, options.totalDownloads);
+  const limited = allItems.slice(0, options.totalDownloads);
+
+  const skipPhrases = options.skipBooksMatching;
+  if (skipPhrases) {
+    const skipped: ContentItem[] = [];
+    const unskipped = limited.filter((b) => {
+      const title = getDownloadTitle(b);
+      const shouldSkip = skipPhrases.some((phrase) =>
+        title.includes(String(phrase))
+      );
+      if (shouldSkip) {
+        skipped.push(b);
+        return false;
+      }
+      return true;
+    });
+
+    const skipPhrasesStr = skipPhrases?.map((p) => `"${p}"`).join(", ");
+    if (skipped.length > 0) {
+      console.log(
+        `${Colors.yellow}\nSkipping the following books due to matching with one of the following skip phrases: ${skipPhrasesStr}\n${Colors.reset}`
+      );
+      skipped.forEach((b) => {
+        const title = getDownloadTitle(b);
+        console.log(`${Colors.yellow}- ${title}${Colors.reset}`);
+      });
+    } else {
+      console.log(
+        `${Colors.yellow}\nNo book were found matching the following skip phrases: ${skipPhrasesStr}${Colors.reset}`
+      );
+    }
+
+    return unskipped;
+  }
+
+  return limited;
 };
 
 /**
@@ -327,6 +362,10 @@ const doesFileExistAndMatchSize = async (
   }
 };
 
+export const getDownloadTitle = (book: ContentItem): string => {
+  return sanitize(`${book.title} ${book.asin}`);
+};
+
 /**
  * Downloads a single book and updates a passed in {@link ProgressBars}
  */
@@ -337,7 +376,7 @@ const downloadSingleBook = async (
   options: Options,
   progressBars: ProgressBars
 ) => {
-  const safeFileName = sanitize(`${book.title} ${book.asin}`);
+  const safeFileName = getDownloadTitle(book);
   const progressBar = progressBars.create(
     `Getting download url: ${safeFileName}`
   );
@@ -581,6 +620,11 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     .option("downloadsDir", {
       type: "string",
       description: "Directory that downloaded books will be saved to",
+    })
+    .option("skipBooksMatching", {
+      type: "array",
+      description:
+        "If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for ignoring books causing issues.",
     })
     .parse();
 

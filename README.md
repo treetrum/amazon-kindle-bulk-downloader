@@ -56,17 +56,18 @@ Note this tool is already configured to read environment variables from an `.env
 
 The following CLI arguments are made available to customise the downloader to your needs
 
-| Argument              | Default Value                          | Description                                                                                                                      |
-| --------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--baseUrl`           | N/A (Will be prompted if not provided) | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                             |
-| `--totalDownloads`    | Infinity                               | Total number of downloads to do                                                                                                  |
-| `--maxConcurrency`    | 10                                     | Maximum number of concurrent downloads                                                                                           |
-| `--startFromOffset`   | 0                                      | Index offset to begin downloading from. Allows resuming of previous partially finished attempts.                                 |
-| `--manualAuth`        | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working. |
-| `--duplicateHandling` | skip                                   | How to handle files of the same name/size on the filesystem. Options: skip, overwrite                                            |
-| `--searchPhrase`      |                                        | Search phrase to filter books by                                                                                                 |
-| `--searchPhraseDirs`  | false                                  | If set to true, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir          |
-| `--downloadsDir`      |                                        | Overrides the default downloads directory                                                                                        |
+| Argument              | Default Value                          | Description                                                                                                                                                                           |
+| --------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--baseUrl`           | N/A (Will be prompted if not provided) | Which Amazon base URL to use. Note, this MUST include www. in order to work properly                                                                                                  |
+| `--totalDownloads`    | Infinity                               | Total number of downloads to do                                                                                                                                                       |
+| `--maxConcurrency`    | 10                                     | Maximum number of concurrent downloads                                                                                                                                                |
+| `--startFromOffset`   | 0                                      | Index offset to begin downloading from. Allows resuming of previous partially finished attempts.                                                                                      |
+| `--manualAuth`        | false                                  | Allows user to manually login using the pupeteer UI instead of automatically using ENV vars. Use when auto login is not working.                                                      |
+| `--duplicateHandling` | skip                                   | How to handle files of the same name/size on the filesystem. Options: skip, overwrite                                                                                                 |
+| `--searchPhrase`      |                                        | Search phrase to filter books by                                                                                                                                                      |
+| `--searchPhraseDirs`  | false                                  | If set to true, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir                                                               |
+| `--downloadsDir`      |                                        | Overrides the default downloads directory                                                                                                                                             |
+| `--skipBooksMatching` |                                        | If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for skipping books that crashes. Can be provided multiple times for multiple skip options. |
 
 ### Running
 
@@ -156,3 +157,23 @@ Whilst this tool doesn't explicitly require Node (Bun is an _alternative_), it s
 If you experience this, try upgrading your local Node version to >= v16 and see if that helps.
 
 HUGE thanks to @keithzg in #145 for the investigation work done on this front.
+
+#### Crashes when encountering certain books
+
+If the program always crashes on a specific book, I recommend using the `--skipBooksMatching` flag to exclude that book from being downloaded. This may help with out of memory issues, etc. You can then attempt to download the problematic book manually from the browser.
+
+Note, this flag can be provided multiple times to skip books matching one of any number of matching phrases.
+
+I.e. given a list of the following books:
+
+- The Lord of the Rings
+- The Hobbit
+- The Silmarillion
+
+If you provided the following skip arguments:
+
+```bash
+bun run start --skipBooksMatching "Hobbit" --skipBooksMatching "Silmarillion"
+```
+
+Only "The Lord of the Rings" would actually get downloaded.
