@@ -341,6 +341,17 @@ const downloadSingleBook = async (
   const progressBar = progressBars.create(
     `Getting download url: ${safeFileName}`
   );
+
+  if (
+    options.skipBooksMatching &&
+    safeFileName.includes(options.skipBooksMatching)
+  ) {
+    progressBar.setContent(
+      `${Colors.yellow}Skipping: ${safeFileName}${Colors.reset}`
+    );
+    return;
+  }
+
   const downloadURL = await getDownloadUrl(auth, device, book, options);
 
   progressBar.setContent(`Downloading: ${safeFileName}`);
@@ -581,6 +592,11 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     .option("downloadsDir", {
       type: "string",
       description: "Directory that downloaded books will be saved to",
+    })
+    .option("skipBooksMatching", {
+      type: "string",
+      description:
+        "If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for ignoring books causing issues.",
     })
     .parse();
 
