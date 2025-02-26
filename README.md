@@ -154,7 +154,7 @@ HUGE thanks to @keithzg in #145 for the investigation work done on this front.
 
 #### Crashes when encountering certain books
 
-If the program always crashes on a specific book, I recommend downloading that book manually and using the `--skipBooksMatching` to exclude that book from being downloaded. This may help with out of memory issues, etc.
+If the program always crashes on a specific book, I recommend using the `--skipBooksMatching` flag to exclude that book from being downloaded. This may help with out of memory issues, etc. You can then attempt to download the problematic book manually from the browser.
 
 Note, this flag can be provided multiple times to skip books matching one of any number of matching phrases.
 
