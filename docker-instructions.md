@@ -2,6 +2,9 @@
 
 1. Clone this repo
 2. Copy the .env template then edit it
+   - add your Amazon user name
+   - add your Amazon password
+   - add `OTP="$OTP"` so you can pass the OTP on the commandline (it only lasts 30s)
 3. Build the image
 4. Run the container, passing the OTP on the commandline
 
