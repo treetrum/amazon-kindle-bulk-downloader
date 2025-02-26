@@ -78,7 +78,7 @@ bun run start --baseUrl "https://www.amazon.com.au"
 
 ## Docker
 
-see [Docker instructions](docker-instructions.md)
+See [Docker instructions here](docker-instructions.md)
 
 ## Troubleshooting
 

@@ -1,30 +1,17 @@
-# Docker Compose
+# Docker Instructions
 
-1. Clone this repo
-2. Copy the .env template then edit it
-   - add your Amazon user name
-   - add your Amazon password
-   - add `OTP="$OTP"` so you can pass the OTP on the commandline (it only lasts 30s)
-3. Build the image
-4. Run the container, passing the OTP on the commandline
+Thanks to the community for helping out with setting up this repo for usage with Docker. Find usage instructions below.
 
-```bash
-cp .env.template .env
-vi .env
-docker compose build
-OTP=???? docker compose run
-```
+## Vanilla Docker
 
-# Docker
-
-## Build docker image
+### Build
 
 ```bash
 docker build . \
    -t amazon-kindle-bulk-downloader
 ```
 
-## Run in Docker
+### Run
 
 Run the built Docker image ensuring to pass in all the required ENV vars and any CLI flags you wish to override. See below for an example:
 
@@ -40,19 +27,40 @@ docker run \
    --baseUrl "https://www.amazon.com"
 ```
 
-# Important Notes
+## Docker Compose
 
-- If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
-- In Docker `--manualAuth` does not work unless you disable 'headless mode', you must provide credentials via env
+### Setup env vars
 
-# Docker specific env variable
+Set environment variables either by exporting them directly, or by copying the `.env.template` file to `.env` and filling out as necessary
+
+> [!TIP]
+> You can omit OTP from the the .env file if you'd like to pass the OTP from the command line like so: `OTP=123123 docker compose run`
+
+### Build
+
+```bash
+docker compose build
+```
+
+### Run
+
+```bash
+docker compose run
+```
+
+## Docker specific env variable
 
 | Variable             | Description                        | Required           |
 | -------------------- | ---------------------------------- | ------------------ |
 | `PUPPETEER_HEADLESS` | run puppeteer in headless mode     | no (default false) |
 | `PUPPETEER_ARGS`     | additional arguments for puppeteer | no                 |
 
-# Docker errors
+## Important Notes
+
+- If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
+- In Docker `--manualAuth` does not work unless you disable 'headless mode', you must provide credentials via env
+
+## Docker troubleshooting
 
 to disable 'headless' mode for debugging (NOTE: this works on linux, untested on MacOS)
 
