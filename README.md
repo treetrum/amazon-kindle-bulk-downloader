@@ -78,41 +78,7 @@ bun run start --baseUrl "https://www.amazon.com.au"
 
 ## Docker
 
-### Build docker image
-
-```bash
-docker build . \
-   -t amazon-kindle-bulk-downloader
-```
-
-### Run in docker
-
-Run the built docker image ensuring to pass in all the required ENV vars and any CLI flags you wish to override. See below for an example:
-
-```bash
-docker run \
-   --rm \
-   -ti \
-   -v ./downloads:/app/downloads \
-   -e AMAZON_USER=userName \
-   -e PASSWORD=pass \
-   -e OTP=otpCode \
-   amazon-kindle-bulk-downloader \
-   --baseUrl "https://www.amazon.com"
-```
-
-### Docker specific env variable
-
-| Variable             | Description                        | Required           |
-| -------------------- | ---------------------------------- | ------------------ |
-| `PUPPETEER_HEADLESS` | run puppeteer in headless mode     | no (default false) |
-| `PUPPETEER_ARGS`     | additional arguments for puppeteer | no                 |
-
-### Important Notes
-
-In docker `--manualAuth` does not work you must provide credentials via env
-
-If you are on arm64 (i.e. a Mac with an Apple Silicon chip) you mast add `--platform linux/x86_64` when running your `docker run` and `docker build
+see [Docker instructions](docker-instructions.md)
 
 ## Troubleshooting
 

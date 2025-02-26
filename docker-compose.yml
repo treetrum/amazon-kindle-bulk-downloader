@@ -1,0 +1,17 @@
+services:
+  kindle-downloader:
+    build: .
+    image: amazon-kindle-bulk-downloader
+    container_name: kindle-downloader
+    stdin_open: true
+    tty: true
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          memory: "8G"
+    env_file:
+      - path: ./.env
+        required: false
+    volumes:
+      - ./downloads:/app/downloads
