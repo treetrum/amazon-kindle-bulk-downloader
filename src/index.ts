@@ -338,7 +338,7 @@ const observeResponse = (
       async start(controller) {
         const reader = response.body?.getReader();
         if (!reader) throw new Error("Bad response");
-        for (; ;) {
+        for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
           loaded += value.byteLength;
@@ -467,7 +467,9 @@ const downloadBooks = async (
 
     const offset = options.startFromOffset;
     console.log(
-      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + offset + 1}-${end + offset})`
+      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${
+        start + offset + 1
+      }-${end + offset})`
     );
 
     const downloadWithErrorHandling = async (book: ContentItem) => {
@@ -494,11 +496,17 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-    const failedBooksContent = failedBooks.map((b) => b.book.title + " : " + b.error.message).join("\n");
+    const failedBooksContent = failedBooks
+      .map((b) => b.book.title + " : " + b.error.message)
+      .join("\n");
     const failedBooksLogPath = path.join(__dirname, "../failed-books.txt");
     await fs.writeFile(failedBooksLogPath, failedBooksContent);
     console.log(
-      `\n${Colors.yellow}⚠️ ${failedBooks.length} book${failedBooks.length === 1 ? "" : "s"} failed to download. A list of failed books has been written to ${failedBooksLogPath}${Colors.reset}`
+      `\n${Colors.yellow}⚠️ ${failedBooks.length} book${
+        failedBooks.length === 1 ? "" : "s"
+      } failed to download. A list of failed books has been written to ${failedBooksLogPath}${
+        Colors.reset
+      }`
     );
   }
 };
@@ -639,7 +647,7 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     .option("sortOrder", {
       default: SortOrder.desc,
       description: "What order to sort books by (Ascending or Descending)",
-      choices: Object.values(SortOrder)
+      choices: Object.values(SortOrder),
     })
 
     .parse();
