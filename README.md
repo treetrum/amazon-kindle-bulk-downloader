@@ -62,8 +62,8 @@ The following CLI arguments are made available to customise the downloader to yo
 | `--searchPhraseDirs`  | false                                  | If set to true, downloaded books will be saved to a sub-directory named after the search phrase within the downloadsDir                                                               |
 | `--downloadsDir`      |                                        | Overrides the default downloads directory                                                                                                                                             |
 | `--skipBooksMatching` |                                        | If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for skipping books that crashes. Can be provided multiple times for multiple skip options. |
-| `--sortBy`            | Title                                  | The Field the books are sorted on before starting the download. Vales can be "Author", "Date" or "Title |
-| `--sortOrder`         | asc                                    | Order in which to sort the books before starting the download. Values can be either "asc" or "desc"     |
+| `--sortBy`            | Title                                  | The Field the books are sorted on before starting the download. Vales can be "Author", "Date" or "Title                                                                               |
+| `--sortOrder`         | asc                                    | Order in which to sort the books before starting the download. Values can be either "asc" or "desc"                                                                                   |
 
 ### Running
 
