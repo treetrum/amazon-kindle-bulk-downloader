@@ -22,7 +22,7 @@ export const getDownloadsDir = (options: Options) => {
   return downloadsDir;
 };
 
-const getSortOrderString = (order: SortOrder): string => {
+export const getSortOrderString = (order: SortOrder): string => {
   switch (order) {
     case SortOrder.asc:
       return "ASCENDING";
