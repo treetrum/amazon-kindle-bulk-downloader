@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> As of 26th February 2025, Amazon has removed the ability to download backups of your Kindle books. Unfortunately, this means that this tool is no longer functional.</br></br>
+> Thank you to everyone who helped triage issues, contributed code, and provided support to others. The amount of traffic this tool received in the week before the shutdown was quite staggering, and I wouldn’t have been able to help quite as many people without the help of the community.</br></br>
+> Thank you all!</br>
+> Sam
+
 # Amazon Kindle eBook Bulk Downloader
 
 Designed for downloading your Kindle eBooks in a more automated fashion than is typically permitted, this tool allows you to create backup copies of the books you've already purchased.
