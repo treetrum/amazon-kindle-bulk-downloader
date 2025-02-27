@@ -168,8 +168,8 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     );
   }
 
-//  Convert the sortOrder command-line value to a String value
-const sortOrderString = getSortOrderString(options.sortOrder);
+  //  Convert the sortOrder command-line value to a String value
+  const sortOrderString = getSortOrderString(options.sortOrder);
 
   while (hasMore) {
     const data = await fetchJson<GetContentOwnershipDataResponse>(
@@ -338,7 +338,7 @@ const observeResponse = (
       async start(controller) {
         const reader = response.body?.getReader();
         if (!reader) throw new Error("Bad response");
-        for (;;) {
+        for (; ;) {
           const { done, value } = await reader.read();
           if (done) break;
           loaded += value.byteLength;
@@ -494,11 +494,7 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-//@@WEB - 2025-02-26 - START
-    //  Added the "Error.Message" to the Output so that the reason for the failure is shown    
-    //const failedBooksContent = failedBooks.map((b) => b.book.title).join("\n");
     const failedBooksContent = failedBooks.map((b) => b.book.title + " : " + b.error.message).join("\n");
-//@@WEB - 2025-02-26 - START    
     const failedBooksLogPath = path.join(__dirname, "../failed-books.txt");
     await fs.writeFile(failedBooksLogPath, failedBooksContent);
     console.log(
@@ -638,11 +634,11 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
     .option("sortBy", {
       default: SortBy.title,
       description: "What value to sort books on (Author, Date or Title)",
-      choices: Object.values(SortBy),    
+      choices: Object.values(SortBy),
     })
     .option("sortOrder", {
       default: SortOrder.desc,
-      description: "What order to sort books by (Ascending or Descending)",    
+      description: "What order to sort books by (Ascending or Descending)",
       choices: Object.values(SortOrder)
     })
 
