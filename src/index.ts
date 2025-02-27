@@ -168,6 +168,9 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
     );
   }
 
+  //  Convert the sortOrder command-line value to a String value
+  const sortOrderString = getSortOrderString(options.sortOrder);
+
   while (hasMore) {
     const data = await fetchJson<GetContentOwnershipDataResponse>(
       `${options.baseUrl}/hz/mycd/digital-console/ajax`,
@@ -191,8 +194,8 @@ const getAllContentItems = async (auth: Auth, options: Options) => {
               "Comixology",
             ],
             fetchCriteria: {
-              sortOrder: "DESCENDING",
-              sortIndex: "TITLE",
+              sortOrder: sortOrderString,
+              sortIndex: options.sortBy?.toString().toUpperCase(),
               startIndex: startIndex,
               batchSize: batchSize,
               totalContentCount: -1,
@@ -464,7 +467,9 @@ const downloadBooks = async (
 
     const offset = options.startFromOffset;
     console.log(
-      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${start + offset + 1}-${end + offset})`
+      `\nProcessing batch ${batchIndex + 1}/${totalBatches} (Books ${
+        start + offset + 1
+      }-${end + offset})`
     );
 
     const downloadWithErrorHandling = async (book: ContentItem) => {
@@ -491,11 +496,17 @@ const downloadBooks = async (
   }
 
   if (failedBooks.length > 0) {
-    const failedBooksContent = failedBooks.map((b) => b.book.title).join("\n");
+    const failedBooksContent = failedBooks
+      .map((b) => b.book.title + " : " + b.error.message)
+      .join("\n");
     const failedBooksLogPath = path.join(__dirname, "../failed-books.txt");
     await fs.writeFile(failedBooksLogPath, failedBooksContent);
     console.log(
-      `\n${Colors.yellow}⚠️ ${failedBooks.length} book${failedBooks.length === 1 ? "" : "s"} failed to download. A list of failed books has been written to ${failedBooksLogPath}${Colors.reset}`
+      `\n${Colors.yellow}⚠️ ${failedBooks.length} book${
+        failedBooks.length === 1 ? "" : "s"
+      } failed to download. A list of failed books has been written to ${failedBooksLogPath}${
+        Colors.reset
+      }`
     );
   }
 };
@@ -626,6 +637,19 @@ const sanitizeBaseURL = async (baseUrl: string | undefined) => {
       description:
         "If a book title contains this phrase, don't attempt to download it. Case sensitive. Useful for ignoring books causing issues.",
     })
+
+    //  Added the "SortBy" and "SortOrder" Command Line options
+    .option("sortBy", {
+      default: SortBy.title,
+      description: "What value to sort books on (Author, Date or Title)",
+      choices: Object.values(SortBy),
+    })
+    .option("sortOrder", {
+      default: SortOrder.desc,
+      description: "What order to sort books by (Ascending or Descending)",
+      choices: Object.values(SortOrder),
+    })
+
     .parse();
 
   const baseUrl = await sanitizeBaseURL(args.baseUrl);
