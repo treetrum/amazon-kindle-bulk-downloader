@@ -22,10 +22,6 @@ export const getDownloadsDir = (options: Options) => {
   return downloadsDir;
 };
 
-// Here
-const sortOrderString = getSortOrderString(options.sortOrder);
-
-// In utils.ts file
 const getSortOrderString = (order: SortOrder): string => {
   switch (order) {
     case SortOrder.asc:
