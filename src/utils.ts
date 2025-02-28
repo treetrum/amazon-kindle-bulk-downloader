@@ -21,3 +21,14 @@ export const getDownloadsDir = (options: Options) => {
 
   return downloadsDir;
 };
+
+export const getSortOrderString = (order: SortOrder): string => {
+  switch (order) {
+    case SortOrder.asc:
+      return "ASCENDING";
+    case SortOrder.desc:
+      return "DESCENDING";
+    default:
+      return "DESCENDING";
+  }
+};

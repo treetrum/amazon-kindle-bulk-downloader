@@ -3,6 +3,17 @@ export enum DuplicateHandling {
   overwrite = "overwrite",
 }
 
+export enum SortBy {
+  author = "author",
+  date = "date",
+  title = "title",
+}
+
+export enum SortOrder {
+  asc = "asc",
+  desc = "desc",
+}
+
 export type Options = {
   baseUrl: string;
   totalDownloads: number;
@@ -14,4 +25,6 @@ export type Options = {
   downloadsDir?: string;
   searchPhraseDirs: boolean;
   skipBooksMatching?: (string | number)[];
+  sortBy?: SortBy;
+  sortOrder?: SortOrder;
 };
